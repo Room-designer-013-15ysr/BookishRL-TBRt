@@ -586,6 +586,23 @@
 </div>
 
 <script>
+  // Load book data automatically as soon as the page opens
+window.addEventListener('DOMContentLoaded', async () => {
+  // Fill in stored settings
+  if (localStorage.getItem('gh_owner')) document.getElementById('gh-owner').value = localStorage.getItem('gh_owner');
+  if (localStorage.getItem('gh_repo')) document.getElementById('gh-repo').value = localStorage.getItem('gh_repo');
+  if (localStorage.getItem('gh_token')) document.getElementById('gh-token').value = localStorage.getItem('gh_token');
+
+  // Pull latest books from GitHub
+  if (localStorage.getItem('gh_token')) {
+    const cloudData = await loadFromGitHub();
+    if (cloudData) {
+      // Replace your local book list with cloud data
+      myBooks = cloudData; 
+      renderBooks(); // Re-draw your UI with the new books
+    }
+  }
+});
   function saveGitHubSettings() {
   localStorage.setItem('gh_owner', document.getElementById('gh-owner').value.trim());
   localStorage.setItem('gh_repo', document.getElementById('gh-repo').value.trim());
