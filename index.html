@@ -586,6 +586,66 @@
 </div>
 
 <script>
+  function saveGitHubSettings() {
+  localStorage.setItem('gh_owner', document.getElementById('gh-owner').value.trim());
+  localStorage.setItem('gh_repo', document.getElementById('gh-repo').value.trim());
+  localStorage.setItem('gh_token', document.getElementById('gh-token').value.trim());
+  alert('Link Cable Connected!');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('gh_owner')) document.getElementById('gh-owner').value = localStorage.getItem('gh_owner');
+  if (localStorage.getItem('gh_repo')) document.getElementById('gh-repo').value = localStorage.getItem('gh_repo');
+  if (localStorage.getItem('gh_token')) document.getElementById('gh-token').value = localStorage.getItem('gh_token');
+});
+  // 1. GET SAVE FILE FROM GITHUB
+async function loadFromGitHub() {
+  const owner = localStorage.getItem('gh_owner');
+  const repo = localStorage.getItem('gh_repo');
+  const token = localStorage.getItem('gh_token');
+
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data.json`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const fileData = await res.json();
+  
+  // Save the file version ID (SHA) so GitHub knows we own this file
+  localStorage.setItem('gh_file_sha', fileData.sha);
+
+  // Unpack the saved data
+  return JSON.parse(atob(fileData.content));
+}
+
+// 2. SEND NEW SAVE FILE TO GITHUB
+async function saveToGitHub(yourNewData) {
+  const owner = localStorage.getItem('gh_owner');
+  const repo = localStorage.getItem('gh_repo');
+  const token = localStorage.getItem('gh_token');
+  const sha = localStorage.getItem('gh_file_sha');
+
+  // Pack up data
+  const text = JSON.stringify(yourNewData, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(text)));
+
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data.json`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: 'Save game data',
+      content: encoded,
+      sha: sha
+    })
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    localStorage.setItem('gh_file_sha', result.content.sha);
+    alert('Game Saved to GitHub!');
+  }
+}
 // SEPARATE STORAGE REPOSITORIES
 let libraryBooks = JSON.parse(localStorage.getItem('bookish_library_books') || '[]');
 let tbrBooks = JSON.parse(localStorage.getItem('bookish_tbr_books') || '[]');
