@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookish Reading Tracker & TBR Hub</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e8e0d4; }
+
+    .app { min-height: 100vh; background: #0f1117; }
+
+    .nav { background: #1a1f2e; border-bottom: 1px solid #2d3650; padding: 0 20px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .nav-logo { font-size: 15px; font-weight: 500; color: #c9b99a; padding: 14px 0; margin-right: 24px; letter-spacing: 0.5px; }
+    .nav-divider { width: 1px; height: 20px; background: #2d3650; margin: 0 8px; }
+    .nav-tab { padding: 14px 14px; font-size: 13px; color: #7a8099; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; }
+    .nav-tab.active { color: #c9b99a; border-bottom-color: #8b6f47; }
+    .nav-tab.tbr-tab.active { color: #9b6bc4; border-bottom-color: #6b4c8b; }
+    .nav-tab:hover:not(.active) { color: #b0b8d0; }
+
+    .page { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .log-header h2 { font-size: 18px; font-weight: 500; color: #c9b99a; }
+    .log-header.tbr-header h2 { color: #9b6bc4; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    
+    .add-btn { background: #3d2b1f; border: 1px solid #6b4c35; color: #c9b99a; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .add-btn:hover { background: #4f3828; }
+    .add-btn.tbr-btn { background: #2a1e2e; border-color: #4a2d6a; color: #9b6bc4; }
+    .add-btn.tbr-btn:hover { background: #39283e; }
+    
+    .data-btn { background: #1a1f2e; border: 1px solid #2d3650; color: #7a8099; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .data-btn:hover { color: #c9b99a; border-color: #4a5570; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 12px; padding: 24px; width: 620px; max-width: 95vw; max-height: 85vh; overflow-y: auto; }
+    .modal h3 { font-size: 16px; font-weight: 500; color: #c9b99a; margin-bottom: 16px; }
+    .modal label { font-size: 12px; color: #7a8099; display: block; margin-bottom: 4px; margin-top: 12px; }
+    .modal input, .modal select, .modal textarea { width: 100%; background: #0f1117; border: 1px solid #2d3650; color: #e8e0d4; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-family: inherit; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .form-col-full { grid-column: 1 / -1; }
+    .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+    .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #c9b99a; cursor: pointer; }
+    .checkbox-item input { width: auto; }
+    
+    .modal-actions { display: flex; gap: 8px; margin-top: 24px; }
+    .btn-save { flex: 1; background: #3d2b1f; border: 1px solid #6b4c35; color: #c9b99a; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .btn-save:hover { background: #4f3828; }
+    .btn-cancel { flex: 1; background: transparent; border: 1px solid #2d3650; color: #7a8099; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+
+    .rating-control { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .stars-input { display: flex; gap: 4px; }
+    .star-wrapper { position: relative; display: inline-block; font-size: 20px; cursor: pointer; color: #2d3650; user-select: none; }
+    .star-wrapper .star-fill { position: absolute; top: 0; left: 0; overflow: hidden; color: #8b6f47; width: 0%; pointer-events: none; }
+    .rating-num-input { width: 70px !important; text-align: center; }
+
+    .log-table-container { overflow-x: auto; }
+    .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .log-table th { text-align: left; padding: 10px; color: #7a8099; font-weight: 400; border-bottom: 1px solid #2d3650; font-size: 12px; white-space: nowrap; }
+    .log-table td { padding: 10px; border-bottom: 1px solid #1e2438; vertical-align: middle; white-space: nowrap; }
+    .log-table tr:hover td { background: #1a1f2e; }
+    .cover-thumb { width: 34px; height: 50px; border-radius: 4px; object-fit: cover; background: #2d3650; display: block; }
+    .cover-placeholder { width: 34px; height: 50px; border-radius: 4px; background: #2d3650; display: flex; align-items: center; justify-content: center; }
+    .genre-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #1e2a1e; color: #6b9e6b; border: 1px solid #2d4a2d; }
+    .rating-display { color: #8b6f47; letter-spacing: 1px; font-size: 12px; }
+    .del-btn, .edit-btn, .track-btn, .move-btn { background: none; border: none; color: #7a8099; cursor: pointer; font-size: 15px; padding: 4px; border-radius: 4px; }
+    .del-btn:hover { color: #c0392b; background: #1e1215; }
+    .edit-btn:hover { color: #c9b99a; background: #1e2438; }
+    .track-btn:hover { color: #6b87c4; background: #1e2438; }
+    .move-btn:hover { color: #6b9e6b; background: #1e2438; }
+    .row-actions { display: flex; gap: 6px; align-items: center; }
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .status-read { background: #1e2a1e; color: #6b9e6b; border: 1px solid #2d4a2d; }
+    .status-reading { background: #1e2238; color: #6b87c4; border: 1px solid #2d3a6a; }
+    .status-tbr { background: #2a1e2e; color: #9b6bc4; border: 1px solid #4a2d6a; }
+    .empty-state { text-align: center; padding: 48px 20px; color: #3a4060; }
+    .empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
+
+    /* BOOKSHELF GALLERY PAGE */
+    .shelf-filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #2d3650; background: transparent; color: #7a8099; transition: all 0.15s; }
+    .filter-btn.active { background: #3d2b1f; border-color: #6b4c35; color: #c9b99a; }
+    
+    .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 28px 20px; align-items: start; }
+    .book-card { display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; position: relative; }
+    .book-cover-wrap { position: relative; width: 100%; aspect-ratio: 2/3; margin-bottom: 10px; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4); background: #1a1f2e; border: 1px solid #2d3650; }
+    .book-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .book-cover-placeholder { width: 100%; height: 100%; background: linear-gradient(145deg, #1e2a3a 0%, #2d3650 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; text-align: center; }
+    .book-cover-placeholder.tbr-placeholder { background: linear-gradient(145deg, #2a1e2e 0%, #3d2b50 100%); }
+    .book-cover-placeholder .book-spine-title { font-size: 12px; color: #c9b99a; line-height: 1.3; font-weight: 500; }
+    .book-cover-placeholder .book-spine-author { font-size: 10px; color: #7a8099; margin-top: 2px; }
+    
+    .book-card-info { width: 100%; text-align: center; padding: 0 2px; }
+    .book-card-title { font-size: 13px; color: #e8e0d4; font-weight: 500; line-height: 1.35; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; }
+    .book-card-author { font-size: 11px; color: #7a8099; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .card-progress-bar { width: 100%; height: 4px; background: #2d3650; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .card-progress-fill { height: 100%; background: #6b87c4; }
+
+    .book-edit-btn { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 6px; background: rgba(15,17,23,0.85); border: 1px solid #2d3650; color: #c9b99a; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+    .book-card:hover .book-edit-btn { opacity: 1; }
+    .book-edit-btn:hover { background: #3d2b1f; border-color: #6b4c35; }
+    .shelf-empty { text-align: center; padding: 48px; color: #3a4060; }
+
+    /* REALISTIC COZY LIBRARY PAGE */
+    .cozy-library-wrap { background: #e8e1d7; color: #4a3e3d; border-radius: 12px; padding: 24px; border: 2px solid #d4c8b8; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+    .cozy-library-wrap.tbr-cozy { background: #e3dbe8; border-color: #cbbcd4; }
+    .cozy-top-dashboard { display: grid; grid-template-columns: 2fr 1.5fr 1fr; gap: 16px; margin-bottom: 24px; align-items: stretch; }
+    @media (max-width: 900px) { .cozy-top-dashboard { grid-template-columns: 1fr; } }
+
+    .cozy-card { background: #f4efe8; border: 1px solid #d8cdbe; border-radius: 8px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; }
+    .tbr-cozy .cozy-card { background: #f2eef5; border-color: #d4c7dc; }
+    .cozy-card-header { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #a38f78; border-bottom: 1px solid #e0d6c8; padding-bottom: 4px; margin-bottom: 10px; text-align: center; }
+    .tbr-cozy .cozy-card-header { color: #8768a3; border-bottom-color: #d8c8e5; }
+
+    .currently-reading-box { display: flex; gap: 12px; align-items: flex-start; }
+    .cr-cover { width: 65px; height: 95px; object-fit: cover; border-radius: 4px; box-shadow: 2px 4px 8px rgba(0,0,0,0.15); background: #c5b8a5; flex-shrink: 0; }
+    .cr-info { flex: 1; font-size: 12px; }
+    .cr-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .cr-table td { padding: 2px 4px; border-bottom: 1px solid #e8dfd3; }
+    .cr-table td:first-child { font-weight: 600; color: #8c765c; width: 75px; }
+
+    .cozy-progress-wrap { margin-top: 8px; }
+    .cozy-progress-bg { height: 8px; background: #d8cdbe; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .cozy-progress-fill { height: 100%; background: #8c765c; border-radius: 4px; }
+    .cozy-log-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; background: #8c765c; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; margin-top: 8px; cursor: pointer; }
+    .cozy-log-btn:hover { background: #6f5d47; }
+
+    .quote-box { text-align: center; font-style: italic; font-family: Georgia, serif; font-size: 13px; color: #5a4d41; justify-content: center; padding: 12px; }
+
+    .genre-bars { display: flex; justify-content: space-around; align-items: flex-end; height: 75px; padding-top: 10px; }
+    .genre-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .genre-pillar { width: 16px; background: #b89b82; border-radius: 2px 2px 0 0; min-height: 4px; }
+    .tbr-cozy .genre-pillar { background: #8e6fb8; }
+    .genre-col-label { font-size: 9px; color: #7a6a58; text-transform: capitalize; }
+
+    /* 3-COLUMN BOOKCASE */
+    .bookcases-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; }
+    @media (max-width: 900px) { .bookcases-container { grid-template-columns: 1fr; } }
+
+    .bookcase-col { background: #eddcd0; border: 8px solid #c2a792; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 8px; position: relative; }
+    .tbr-cozy .bookcase-col { background: #e3d2eb; border-color: #aa91bd; }
+    .hanging-plant { position: absolute; top: -12px; right: -8px; font-size: 22px; color: #5a7c50; z-index: 5; pointer-events: none; }
+    
+    .cozy-shelf { background: #f8f5f0; border-bottom: 12px solid #b3957d; min-height: 110px; margin-bottom: 12px; padding: 8px 8px 0 8px; display: flex; align-items: flex-end; gap: 3px; position: relative; overflow: hidden; }
+    .tbr-cozy .cozy-shelf { background: #f7f3f9; border-bottom-color: #9d80b8; }
+    .cozy-shelf:last-child { margin-bottom: 0; }
+
+    .cozy-spine-v { 
+      height: 75px; width: 18px; border-radius: 2px 2px 0 0; display: flex; align-items: center; justify-content: center; 
+      writing-mode: vertical-rl; transform: rotate(180deg); font-size: 9px; font-weight: 600; color: #fff; cursor: pointer; 
+      padding: 4px 0; box-shadow: inset 1px 0 2px rgba(255,255,255,0.3), 1px 0 3px rgba(0,0,0,0.15); white-space: nowrap; 
+      overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; transition: transform 0.15s;
+    }
+    .cozy-spine-v:hover { transform: rotate(180deg) translateY(-4px); }
+    .shelf-plant { font-size: 16px; margin: 0 4px; pointer-events: none; }
+
+    /* EXPANDED DASHBOARD PAGE */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 10px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: #7a8099; margin-bottom: 6px; }
+    .stat-value { font-size: 20px; font-weight: 500; color: #c9b99a; }
+    .stat-sub { font-size: 11px; color: #4a5570; margin-top: 2px; }
+
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .chart-card { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 10px; padding: 16px; }
+    .chart-title { font-size: 12px; color: #7a8099; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .bar-label { font-size: 11px; color: #9aa0b8; min-width: 85px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 8px; background: #0f1117; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .bar-count { font-size: 11px; color: #4a5570; min-width: 24px; }
+
+    .donut-wrap { display: flex; align-items: center; gap: 16px; }
+    .donut-legend { flex: 1; }
+    .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 11px; color: #9aa0b8; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .recent-card { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 10px; padding: 16px; }
+    .recent-title { font-size: 12px; color: #7a8099; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .recent-book { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a2030; }
+    .recent-book:last-child { border-bottom: none; }
+    .recent-cover { width: 28px; height: 40px; border-radius: 2px; background: #2d3650; object-fit: cover; flex-shrink: 0; }
+    .recent-info { flex: 1; min-width: 0; }
+    .recent-book-title { font-size: 12px; color: #c9b99a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-book-author { font-size: 11px; color: #7a8099; }
+
+    .monthly-row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 60px; margin-top: 8px; }
+    .month-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; justify-content: flex-end; }
+    .month-bar { width: 100%; background: #3d2b1f; border-radius: 2px 2px 0 0; min-height: 2px; transition: height 0.5s ease; }
+    .month-bar.has-books { background: #8b6f47; }
+    .month-label { font-size: 8px; color: #4a5570; }
+
+    /* PROGRESS TRACKING MODAL & STYLES */
+    .progress-history { margin-top: 16px; max-height: 180px; overflow-y: auto; border: 1px solid #2d3650; border-radius: 6px; padding: 8px; background: #0f1117; }
+    .progress-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid #1a2030; }
+    .progress-item:last-child { border-bottom: none; }
+    .progress-meta { color: #7a8099; }
+    .progress-val { font-weight: 500; color: #6b87c4; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="nav">
+    <span class="nav-logo">📚 bookish hub</span>
+    <!-- LIBRARY TABS -->
+    <button class="nav-tab active" onclick="showPage('log')">reading log</button>
+    <button class="nav-tab" onclick="showPage('shelf')">bookshelf</button>
+    <button class="nav-tab" onclick="showPage('featured')">library display</button>
+    <button class="nav-tab" onclick="showPage('dashboard')">dashboard</button>
+    
+    <div class="nav-divider"></div>
+
+    <!-- TBR TABS -->
+    <button class="nav-tab tbr-tab" onclick="showPage('tbr-log')">tbr log</button>
+    <button class="nav-tab tbr-tab" onclick="showPage('tbr-shelf')">tbr shelf</button>
+    <button class="nav-tab tbr-tab" onclick="showPage('tbr-featured')">tbr display</button>
+  </div>
+
+  <!-- 1. MAIN LIBRARY READING LOG PAGE -->
+  <div class="page active" id="page-log">
+    <div class="log-header">
+      <h2>my reading log</h2>
+      <div class="header-actions">
+        <button class="data-btn" onclick="exportData('library')"><i class="ti ti-download"></i> export library.json</button>
+        <button class="data-btn" onclick="triggerImport('library')"><i class="ti ti-upload"></i> import library.json</button>
+        <button class="add-btn" onclick="openModal('library')"><i class="ti ti-plus"></i> add book</button>
+      </div>
+    </div>
+    <div class="log-table-container">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th style="width:42px"></th>
+            <th>title</th>
+            <th>author</th>
+            <th>genre</th>
+            <th>format</th>
+            <th>progress</th>
+            <th>rating</th>
+            <th>status</th>
+            <th style="width:100px">actions</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+      <div id="log-empty" class="empty-state" style="display:none">
+        <i class="ti ti-book"></i>
+        <p style="font-size:14px">no books in library — add your first one!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN LIBRARY BOOKSHELF -->
+  <div class="page" id="page-shelf">
+    <div class="shelf-filters" id="shelf-filters">
+      <button class="filter-btn active" onclick="filterShelf('all',this)">all books</button>
+      <button class="filter-btn" onclick="filterShelf('read',this)">read</button>
+      <button class="filter-btn" onclick="filterShelf('reading',this)">currently reading</button>
+    </div>
+    <div class="shelf-grid" id="shelf-grid"></div>
+    <div id="shelf-empty" class="shelf-empty" style="display:none">
+      <i class="ti ti-books" style="font-size:40px;display:block;margin-bottom:12px;color:#3a4060"></i>
+      <p style="font-size:14px;color:#3a4060">your bookshelf is empty</p>
+    </div>
+  </div>
+
+  <!-- 3. MAIN LIBRARY DISPLAY -->
+  <div class="page" id="page-featured">
+    <div class="cozy-library-wrap">
+      <div class="cozy-top-dashboard">
+        <div class="cozy-card">
+          <div class="cozy-card-header">currently reading</div>
+          <div id="cozy-cr-wrap"></div>
+        </div>
+        <div class="cozy-card">
+          <div class="cozy-card-header">favorite quote / notes</div>
+          <div class="quote-box" id="cozy-quote-box">"A room without books is like a body without a soul."</div>
+        </div>
+        <div class="cozy-card">
+          <div class="cozy-card-header">genre overview</div>
+          <div class="genre-bars" id="cozy-genre-bars"></div>
+        </div>
+      </div>
+      <div class="bookcases-container" id="cozy-bookcases">
+        <div class="bookcase-col"><div class="hanging-plant">🪴</div><div class="cozy-shelf" id="shelf-1-1"></div><div class="cozy-shelf" id="shelf-1-2"></div><div class="cozy-shelf" id="shelf-1-3"></div><div class="cozy-shelf" id="shelf-1-4"></div><div class="cozy-shelf" id="shelf-1-5"></div></div>
+        <div class="bookcase-col"><div class="cozy-shelf" id="shelf-2-1"></div><div class="cozy-shelf" id="shelf-2-2"></div><div class="cozy-shelf" id="shelf-2-3"></div><div class="cozy-shelf" id="shelf-2-4"></div><div class="cozy-shelf" id="shelf-2-5"></div></div>
+        <div class="bookcase-col"><div class="hanging-plant">🌿</div><div class="cozy-shelf" id="shelf-3-1"></div><div class="cozy-shelf" id="shelf-3-2"></div><div class="cozy-shelf" id="shelf-3-3"></div><div class="cozy-shelf" id="shelf-3-4"></div><div class="cozy-shelf" id="shelf-3-5"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. DASHBOARD PAGE -->
+  <div class="page" id="page-dashboard">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">top genres</div><div id="genre-chart"></div></div>
+      <div class="chart-card"><div class="chart-title">top sub-genres</div><div id="subgenre-chart"></div></div>
+      <div class="chart-card"><div class="chart-title">format distribution</div><div class="donut-wrap"><canvas id="format-canvas" width="100" height="100"></canvas><div class="donut-legend" id="format-legend"></div></div></div>
+      <div class="chart-card"><div class="chart-title">series progress</div><div id="series-chart"></div></div>
+      <div class="chart-card"><div class="chart-title">acquisition sources</div><div id="acquired-chart"></div></div>
+      <div class="chart-card"><div class="chart-title">reading status</div><div class="donut-wrap"><canvas id="donut-canvas" width="100" height="100"></canvas><div class="donut-legend" id="donut-legend"></div></div></div>
+      <div class="chart-card"><div class="chart-title">audiobook narrators</div><div id="narrator-chart"></div></div>
+      <div class="chart-card">
+        <div class="chart-title">books read by month</div>
+        <div class="monthly-row" id="monthly-chart"></div>
+        <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:4px">
+          <div class="month-label" style="text-align:center">J</div><div class="month-label" style="text-align:center">F</div><div class="month-label" style="text-align:center">M</div><div class="month-label" style="text-align:center">A</div><div class="month-label" style="text-align:center">M</div><div class="month-label" style="text-align:center">J</div><div class="month-label" style="text-align:center">J</div><div class="month-label" style="text-align:center">A</div><div class="month-label" style="text-align:center">S</div><div class="month-label" style="text-align:center">O</div><div class="month-label" style="text-align:center">N</div><div class="month-label" style="text-align:center">D</div>
+        </div>
+      </div>
+      <div class="recent-card"><div class="recent-title">recently added</div><div id="recent-list"></div></div>
+    </div>
+  </div>
+
+  <!-- 5. TBR LOG (SPREADSHEET) PAGE -->
+  <div class="page" id="page-tbr-log">
+    <div class="log-header tbr-header">
+      <h2>to-be-read list (tbr)</h2>
+      <div class="header-actions">
+        <button class="data-btn" onclick="exportData('tbr')"><i class="ti ti-download"></i> export tbr.json</button>
+        <button class="data-btn" onclick="triggerImport('tbr')"><i class="ti ti-upload"></i> import tbr.json</button>
+        <button class="add-btn tbr-btn" onclick="openModal('tbr')"><i class="ti ti-plus"></i> add tbr book</button>
+      </div>
+    </div>
+    <div class="log-table-container">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th style="width:42px"></th>
+            <th>title</th>
+            <th>author</th>
+            <th>genre</th>
+            <th>target format</th>
+            <th>pages</th>
+            <th>series</th>
+            <th>actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbr-log-tbody"></tbody>
+      </table>
+      <div id="tbr-log-empty" class="empty-state" style="display:none">
+        <i class="ti ti-bookmark" style="color:#9b6bc4"></i>
+        <p style="font-size:14px">your tbr list is empty!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. TBR BOOKSHELF PAGE -->
+  <div class="page" id="page-tbr-shelf">
+    <div class="shelf-grid" id="tbr-shelf-grid"></div>
+    <div id="tbr-shelf-empty" class="shelf-empty" style="display:none">
+      <i class="ti ti-books" style="font-size:40px;display:block;margin-bottom:12px;color:#4a2d6a"></i>
+      <p style="font-size:14px;color:#4a2d6a">no tbr books on shelf</p>
+    </div>
+  </div>
+
+  <!-- 7. TBR LIBRARY DISPLAY PAGE -->
+  <div class="page" id="page-tbr-featured">
+    <div class="cozy-library-wrap tbr-cozy">
+      <div class="cozy-top-dashboard">
+        <div class="cozy-card">
+          <div class="cozy-card-header">tbr wishlist summary</div>
+          <div id="tbr-summary-box" style="font-size:12px;text-align:center;padding:12px;"></div>
+        </div>
+        <div class="cozy-card">
+          <div class="cozy-card-header">up next quote / notes</div>
+          <div class="quote-box" id="tbr-quote-box">"So many books, so little time."</div>
+        </div>
+        <div class="cozy-card">
+          <div class="cozy-card-header">tbr genres</div>
+          <div class="genre-bars" id="tbr-genre-bars"></div>
+        </div>
+      </div>
+      <div class="bookcases-container" id="tbr-bookcases">
+        <div class="bookcase-col"><div class="hanging-plant">🪴</div><div class="cozy-shelf" id="tbr-shelf-1-1"></div><div class="cozy-shelf" id="tbr-shelf-1-2"></div><div class="cozy-shelf" id="tbr-shelf-1-3"></div><div class="cozy-shelf" id="tbr-shelf-1-4"></div><div class="cozy-shelf" id="tbr-shelf-1-5"></div></div>
+        <div class="bookcase-col"><div class="cozy-shelf" id="tbr-shelf-2-1"></div><div class="cozy-shelf" id="tbr-shelf-2-2"></div><div class="cozy-shelf" id="tbr-shelf-2-3"></div><div class="cozy-shelf" id="tbr-shelf-2-4"></div><div class="cozy-shelf" id="tbr-shelf-2-5"></div></div>
+        <div class="bookcase-col"><div class="hanging-plant">🌿</div><div class="cozy-shelf" id="tbr-shelf-3-1"></div><div class="cozy-shelf" id="tbr-shelf-3-2"></div><div class="cozy-shelf" id="tbr-shelf-3-3"></div><div class="cozy-shelf" id="tbr-shelf-3-4"></div><div class="cozy-shelf" id="tbr-shelf-3-5"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- HIDDEN FILE INPUT FOR IMPORT -->
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="handleFileImport(event)" />
+
+<!-- MAIN BOOK MODAL FORM -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="modal-title">add a book</h3>
+    
+    <div class="form-grid">
+      <div class="form-col-full">
+        <label>title</label>
+        <input type="text" id="f-title" placeholder="book title" />
+      </div>
+
+      <div>
+        <label>author</label>
+        <input type="text" id="f-author" placeholder="author name" />
+      </div>
+
+      <div>
+        <label>new author?</label>
+        <select id="f-new-author">
+          <option value="">(optional)</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div>
+        <label>genre</label>
+        <input type="text" id="f-genre" placeholder="e.g. Fantasy, Romance" />
+      </div>
+
+      <div>
+        <label>sub-genre(s)</label>
+        <input type="text" id="f-subgenre" placeholder="e.g. High Fantasy, Cozy" />
+      </div>
+
+      <div>
+        <label>format</label>
+        <select id="f-format">
+          <option value="">(optional)</option>
+          <option value="Physical">Physical</option>
+          <option value="E-Book">E-Book</option>
+          <option value="Audiobook">Audiobook</option>
+        </select>
+      </div>
+
+      <div>
+        <label>status / list destination</label>
+        <select id="f-status">
+          <option value="read">read (Main Library)</option>
+          <option value="reading">currently reading (Main Library)</option>
+          <option value="tbr">to be read (TBR List)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>page count</label>
+        <input type="number" id="f-pages" placeholder="e.g. 432" min="1" />
+      </div>
+
+      <div>
+        <label>word count</label>
+        <input type="number" id="f-word-count" placeholder="e.g. 95000" min="1" />
+      </div>
+
+      <div>
+        <label>audio length</label>
+        <input type="text" id="f-audio-length" placeholder="e.g. 11h 45m" />
+      </div>
+
+      <div>
+        <label>narrated by</label>
+        <input type="text" id="f-narrator" placeholder="narrator name" />
+      </div>
+
+      <div>
+        <label>start date</label>
+        <input type="date" id="f-start-date" />
+      </div>
+
+      <div>
+        <label>end date / date finished</label>
+        <input type="date" id="f-date" />
+      </div>
+
+      <div>
+        <label>series info</label>
+        <input type="text" id="f-series" placeholder="e.g. Series Name #1" />
+      </div>
+
+      <div>
+        <label>series progress</label>
+        <select id="f-series-status">
+          <option value="">(optional)</option>
+          <option value="Start Series">Start Series</option>
+          <option value="Cont. Series">Cont. Series</option>
+          <option value="Finish Series">Finish Series</option>
+          <option value="Standalone">Standalone</option>
+        </select>
+      </div>
+
+      <div>
+        <label>acquired from / store</label>
+        <input type="text" id="f-acquired" placeholder="e.g. Library, Bookstore" />
+      </div>
+
+      <div>
+        <label>rating (quarter & half stars supported)</label>
+        <div class="rating-control">
+          <div class="stars-input" id="star-input">
+            <div class="star-wrapper" data-v="1">★<div class="star-fill">★</div></div>
+            <div class="star-wrapper" data-v="2">★<div class="star-fill">★</div></div>
+            <div class="star-wrapper" data-v="3">★<div class="star-fill">★</div></div>
+            <div class="star-wrapper" data-v="4">★<div class="star-fill">★</div></div>
+            <div class="star-wrapper" data-v="5">★<div class="star-fill">★</div></div>
+          </div>
+          <input type="number" id="f-rating-num" class="rating-num-input" step="0.25" min="0" max="5" placeholder="0.0" oninput="onRatingNumChange(this.value)" />
+        </div>
+      </div>
+
+      <div class="form-col-full">
+        <label>queer characters / rep</label>
+        <input type="text" id="f-queer-rep" placeholder="e.g. Sapphic MC, Non-Binary side character" />
+      </div>
+
+      <div class="form-col-full">
+        <label>cover url</label>
+        <input type="text" id="f-cover" placeholder="https://..." />
+      </div>
+
+      <div class="form-col-full">
+        <label>tags / thoughts / why on tbr</label>
+        <textarea id="f-thoughts" rows="2" placeholder="thoughts or review notes..."></textarea>
+      </div>
+
+      <div class="form-col-full">
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" id="f-arc" /> ARC?</label>
+          <label class="checkbox-item"><input type="checkbox" id="f-reread" /> Re-read?</label>
+          <label class="checkbox-item"><input type="checkbox" id="f-cry" /> Did I Cry?</label>
+          <label class="checkbox-item"><input type="checkbox" id="f-gifted" /> Gifted?</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">cancel</button>
+      <button class="btn-save" id="modal-save-btn" onclick="saveBook()">save book</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS TRACKING MODAL -->
+<div class="modal-bg" id="progress-modal-bg">
+  <div class="modal" style="width:450px;">
+    <h3>update reading progress</h3>
+    <p id="progress-book-title" style="font-size:13px;color:#8b6f47;margin-bottom:12px;"></p>
+    
+    <div>
+      <label>date</label>
+      <input type="date" id="p-date" />
+    </div>
+
+    <div class="form-grid">
+      <div>
+        <label id="p-label-num">current page</label>
+        <input type="number" id="p-num" placeholder="e.g. 150" min="0" />
+      </div>
+      <div>
+        <label>total pages</label>
+        <input type="number" id="p-total" placeholder="e.g. 400" min="1" />
+      </div>
+    </div>
+
+    <div>
+      <label>notes / thoughts for this entry (optional)</label>
+      <input type="text" id="p-notes" placeholder="e.g. Chapter 12 - big plot twist!" />
+    </div>
+
+    <label style="margin-top:16px;">reading history</label>
+    <div class="progress-history" id="progress-history-list"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeProgressModal()">close</button>
+      <button class="btn-save" onclick="saveProgressEntry()">log progress</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// SEPARATE STORAGE REPOSITORIES
+let libraryBooks = JSON.parse(localStorage.getItem('bookish_library_books') || '[]');
+let tbrBooks = JSON.parse(localStorage.getItem('bookish_tbr_books') || '[]');
+
+let pendingRating = 0;
+let shelfFilter = 'all';
+let editingId = null;
+let targetRepository = 'library'; // 'library' or 'tbr'
+let activeProgressBookId = null;
+let importTargetRepo = 'library';
+
+const PALETTE = ['#8b6f47', '#4a7c59', '#6b4c8b', '#4c6b8b', '#8b4c4c', '#7c7a4a', '#4c7c7a', '#a38f78', '#6f4e37'];
+const COZY_PALETTE = ['#e07a5f', '#f2cc8f', '#81b29a', '#3d405b', '#e09f3e', '#9e2a2b', '#540b0e', '#6f4e37', '#a3b18a', '#d4a373'];
+const TBR_PALETTE = ['#9b6bc4', '#6b4c8b', '#4a2d6a', '#b88ce0', '#8a52c4', '#5c3587', '#3d2559'];
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+/* IMPORT / EXPORT HANDLERS */
+function exportData(repoType) {
+  const data = repoType === 'tbr' ? tbrBooks : libraryBooks;
+  const fileName = repoType === 'tbr' ? 'tbr.json' : 'library.json';
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function triggerImport(repoType) {
+  importTargetRepo = repoType;
+  document.getElementById('import-file').click();
+}
+
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (Array.isArray(parsed)) {
+        if (importTargetRepo === 'tbr') {
+          tbrBooks = parsed;
+          localStorage.setItem('bookish_tbr_books', JSON.stringify(tbrBooks));
+        } else {
+          libraryBooks = parsed;
+          localStorage.setItem('bookish_library_books', JSON.stringify(libraryBooks));
+        }
+        renderAll();
+        alert(`Successfully imported ${parsed.length} books into ${importTargetRepo.toUpperCase()}!`);
+      } else {
+        alert('Invalid JSON file format. Expected an array of books.');
+      }
+    } catch (err) {
+      alert('Error parsing JSON file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* STAR RATING CONTROLS */
+function setRating(val) {
+  pendingRating = Math.max(0, Math.min(5, parseFloat(val) || 0));
+  document.getElementById('f-rating-num').value = pendingRating ? pendingRating : '';
+  updateStarUI(pendingRating);
+}
+function onRatingNumChange(val) { setRating(val); }
+
+function updateStarUI(ratingVal) {
+  const r = ratingVal !== undefined ? ratingVal : pendingRating;
+  document.querySelectorAll('#star-input .star-wrapper').forEach((w, idx) => {
+    const starNum = idx + 1;
+    const fill = w.querySelector('.star-fill');
+    if (r >= starNum) fill.style.width = '100%';
+    else if (r > starNum - 1) fill.style.width = ((r - (starNum - 1)) * 100) + '%';
+    else fill.style.width = '0%';
+  });
+}
+
+document.querySelectorAll('#star-input .star-wrapper').forEach((w, idx) => {
+  w.addEventListener('mousemove', (e) => {
+    const rect = w.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    let quarter = Math.ceil(pct * 4) / 4;
+    updateStarUI(idx + quarter);
+  });
+  w.addEventListener('click', (e) => {
+    const rect = w.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    let quarter = Math.ceil(pct * 4) / 4;
+    setRating(idx + quarter);
+  });
+});
+
+document.getElementById('star-input').addEventListener('mouseleave', () => { updateStarUI(pendingRating); });
+
+/* MODAL & CRUD ACTIONS */
+function openModal(defaultRepo = 'library', id = null) {
+  editingId = id;
+  targetRepository = defaultRepo;
+  let book = null;
+
+  if (editingId !== null) {
+    book = libraryBooks.find(b => b.id === editingId) || tbrBooks.find(b => b.id === editingId);
+  }
+
+  setRating(book ? (book.rating || 0) : 0);
+
+  document.getElementById('f-title').value = book ? book.title : '';
+  document.getElementById('f-author').value = book ? book.author : '';
+  document.getElementById('f-new-author').value = book ? (book.newAuthor || '') : '';
+  document.getElementById('f-genre').value = book ? book.genre : '';
+  document.getElementById('f-subgenre').value = book ? (book.subgenre || '') : '';
+  document.getElementById('f-format').value = book ? (book.format || '') : '';
+  document.getElementById('f-status').value = book ? book.status : (defaultRepo === 'tbr' ? 'tbr' : 'read');
+  document.getElementById('f-pages').value = book ? (book.pages || '') : '';
+  document.getElementById('f-word-count').value = book ? (book.wordCount || '') : '';
+  document.getElementById('f-audio-length').value = book ? (book.audioLength || '') : '';
+  document.getElementById('f-narrator').value = book ? (book.narrator || '') : '';
+  document.getElementById('f-start-date').value = book ? (book.startDate || '') : '';
+  document.getElementById('f-date').value = book ? (book.date || '') : '';
+  document.getElementById('f-series').value = book ? (book.series || '') : '';
+  document.getElementById('f-series-status').value = book ? (book.seriesStatus || '') : '';
+  document.getElementById('f-acquired').value = book ? (book.acquired || '') : '';
+  document.getElementById('f-queer-rep').value = book ? (book.queerRep || '') : '';
+  document.getElementById('f-cover').value = book ? (book.cover || '') : '';
+  document.getElementById('f-thoughts').value = book ? (book.thoughts || '') : '';
+
+  document.getElementById('f-arc').checked = book ? !!book.arc : false;
+  document.getElementById('f-reread').checked = book ? !!book.reread : false;
+  document.getElementById('f-cry').checked = book ? !!book.cry : false;
+  document.getElementById('f-gifted').checked = book ? !!book.gifted : false;
+
+  document.getElementById('modal-title').textContent = book ? 'edit book' : `add book to ${defaultRepo.toUpperCase()}`;
+  document.getElementById('modal-save-btn').textContent = book ? 'save changes' : 'save book';
+
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); editingId = null; }
+
+function saveBook() {
+  const title = document.getElementById('f-title').value.trim() || 'Untitled';
+  const status = document.getElementById('f-status').value;
+  
+  const bookData = {
+    title,
+    author: document.getElementById('f-author').value.trim(),
+    newAuthor: document.getElementById('f-new-author').value,
+    genre: document.getElementById('f-genre').value.trim(),
+    subgenre: document.getElementById('f-subgenre').value.trim(),
+    format: document.getElementById('f-format').value,
+    status: status,
+    pages: parseInt(document.getElementById('f-pages').value) || 0,
+    wordCount: parseInt(document.getElementById('f-word-count').value) || 0,
+    audioLength: document.getElementById('f-audio-length').value.trim(),
+    narrator: document.getElementById('f-narrator').value.trim(),
+    startDate: document.getElementById('f-start-date').value,
+    date: document.getElementById('f-date').value,
+    series: document.getElementById('f-series').value.trim(),
+    seriesStatus: document.getElementById('f-series-status').value,
+    acquired: document.getElementById('f-acquired').value.trim(),
+    queerRep: document.getElementById('f-queer-rep').value.trim(),
+    cover: document.getElementById('f-cover').value.trim(),
+    thoughts: document.getElementById('f-thoughts').value.trim(),
+    arc: document.getElementById('f-arc').checked,
+    reread: document.getElementById('f-reread').checked,
+    cry: document.getElementById('f-cry').checked,
+    gifted: document.getElementById('f-gifted').checked,
+    rating: pendingRating
+  };
+
+  // Remove existing instance from both repos if editing
+  if (editingId !== null) {
+    libraryBooks = libraryBooks.filter(b => b.id !== editingId);
+    tbrBooks = tbrBooks.filter(b => b.id !== editingId);
+  }
+
+  const newBook = { id: editingId || Date.now(), added: Date.now(), currentPage: 0, progressLogs: [], ...bookData };
+
+  // Route based on status to appropriate JSON repository
+  if (status === 'tbr') {
+    tbrBooks.unshift(newBook);
+  } else {
+    libraryBooks.unshift(newBook);
+  }
+
+  persist();
+  closeModal();
+  renderAll();
+}
+
+/* MOVE TBR BOOK TO CURRENTLY READING */
+function moveTbrToReading(id) {
+  const idx = tbrBooks.findIndex(b => b.id === id);
+  if (idx > -1) {
+    const book = tbrBooks.splice(idx, 1)[0];
+    book.status = 'reading';
+    book.startDate = new Date().toISOString().split('T')[0];
+    libraryBooks.unshift(book);
+    persist();
+    renderAll();
+    openProgressModal(book.id);
+  }
+}
+
+function deleteBook(id, repoType) {
+  if (repoType === 'tbr') tbrBooks = tbrBooks.filter(b => b.id !== id);
+  else libraryBooks = libraryBooks.filter(b => b.id !== id);
+  persist();
+  renderAll();
+}
+
+function persist() {
+  localStorage.setItem('bookish_library_books', JSON.stringify(libraryBooks));
+  localStorage.setItem('bookish_tbr_books', JSON.stringify(tbrBooks));
+}
+
+/* PROGRESS TRACKING FUNCTIONS */
+function openProgressModal(bookId) {
+  activeProgressBookId = bookId;
+  const book = libraryBooks.find(b => b.id === bookId) || tbrBooks.find(b => b.id === bookId);
+  if (!book) return;
+
+  document.getElementById('progress-book-title').textContent = `${book.title} by ${book.author || 'Unknown'}`;
+  document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('p-num').value = book.currentPage || 0;
+  document.getElementById('p-total').value = book.pages || '';
+  document.getElementById('p-notes').value = '';
+
+  renderProgressHistory(book);
+  document.getElementById('progress-modal-bg').classList.add('open');
+}
+
+function closeProgressModal() {
+  document.getElementById('progress-modal-bg').classList.remove('open');
+  activeProgressBookId = null;
+}
+
+function renderProgressHistory(book) {
+  const container = document.getElementById('progress-history-list');
+  const logs = book.progressLogs || [];
+  if (!logs.length) {
+    container.innerHTML = '<p style="font-size:11px;color:#7a8099;text-align:center;padding:12px;">No reading entries logged yet.</p>';
+    return;
+  }
+  container.innerHTML = logs.map(l => `
+    <div class="progress-item">
+      <div>
+        <span class="progress-val">Page ${l.page}</span>
+        ${l.notes ? `<span class="progress-meta"> — "${escapeHtml(l.notes)}"` : ''}
+      </div>
+      <span class="progress-meta">${l.date}</span>
+    </div>
+  `).join('');
+}
+
+function saveProgressEntry() {
+  if (!activeProgressBookId) return;
+  const book = libraryBooks.find(b => b.id === activeProgressBookId);
+  if (!book) return;
+
+  const date = document.getElementById('p-date').value || new Date().toISOString().split('T')[0];
+  const page = parseInt(document.getElementById('p-num').value) || 0;
+  const totalPages = parseInt(document.getElementById('p-total').value) || 0;
+  const notes = document.getElementById('p-notes').value.trim();
+
+  if (totalPages > 0) book.pages = totalPages;
+  book.currentPage = page;
+
+  if (!book.progressLogs) book.progressLogs = [];
+  book.progressLogs.unshift({ date, page, notes });
+
+  if (book.pages > 0 && book.currentPage >= book.pages) {
+    book.status = 'read';
+    if (!book.date) book.date = date;
+  }
+
+  persist();
+  closeProgressModal();
+  renderAll();
+}
+
+function renderStarsFormatted(rating) {
+  if (!rating) return '—';
+  return '★ ' + rating.toFixed(2).replace(/\.00$/, '').replace(/0$/, '');
+}
+
+function statusClass(s) {
+  return s === 'read' ? 'status-read' : s === 'reading' ? 'status-reading' : 'status-tbr';
+}
+function statusLabel(s) {
+  return s === 'read' ? 'read' : s === 'reading' ? 'currently reading' : 'to be read';
+}
+
+/* RENDER FUNCTIONS */
+function renderLog() {
+  const tbody = document.getElementById('log-tbody');
+  const empty = document.getElementById('log-empty');
+  if (!libraryBooks.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = libraryBooks.map(b => {
+    const cur = b.currentPage || 0;
+    const tot = b.pages || 0;
+    return `
+    <tr>
+      <td>${b.cover ? `<img src="${escapeHtml(b.cover)}" class="cover-thumb" alt="">` : `<div class="cover-placeholder"><i class="ti ti-book" style="color:#3a4060;font-size:14px"></i></div>`}</td>
+      <td style="font-size:13px;color:#c9b99a;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(b.title)}</td>
+      <td style="color:#9aa0b8">${escapeHtml(b.author || '—')}</td>
+      <td>${b.genre ? `<span class="genre-badge">${escapeHtml(b.genre.split(',')[0].trim())}</span>` : '—'}</td>
+      <td style="color:#7a8099">${escapeHtml(b.format || '—')}</td>
+      <td style="color:#7a8099">${b.status === 'reading' ? `pg ${cur} /${tot || '?'}` : (tot ? `${tot} pgs` : '—')}</td>
+      <td class="rating-display">${renderStarsFormatted(b.rating)}</td>
+      <td><span class="status-badge ${statusClass(b.status)}">${statusLabel(b.status)}</span></td>
+      <td>
+        <div class="row-actions">
+          ${b.status === 'reading' ? `<button class="track-btn" onclick="openProgressModal(${b.id})" title="Track Progress"><i class="ti ti-bookmarks"></i></button>` : ''}
+          <button class="edit-btn" onclick="openModal('library', ${b.id})" title="Edit book"><i class="ti ti-pencil"></i></button>
+          <button class="del-btn" onclick="deleteBook(${b.id}, 'library')" title="Delete book"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterShelf(f, el) {
+  shelfFilter = f;
+  document.querySelectorAll('.shelf-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderShelf();
+}
+
+function renderShelf() {
+  const grid = document.getElementById('shelf-grid');
+  const empty = document.getElementById('shelf-empty');
+  const filtered = shelfFilter === 'all' ? libraryBooks : libraryBooks.filter(b => b.status === shelfFilter);
+  if (!filtered.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = filtered.map(b => {
+    const cur = b.currentPage || 0;
+    const tot = b.pages || 0;
+    const pct = tot > 0 ? Math.min(100, Math.round((cur / tot) * 100)) : 0;
+    return `
+    <div class="book-card" onclick="${b.status === 'reading' ? `openProgressModal(${b.id})` : `openModal('library', ${b.id})`}">
+      <div class="book-cover-wrap">
+        ${b.cover ? `<img src="${escapeHtml(b.cover)}" class="book-cover" alt="">` : `<div class="book-cover-placeholder"><span class="book-spine-title">${escapeHtml(b.title)}</span><span class="book-spine-author">${escapeHtml(b.author)}</span></div>`}
+        <button class="book-edit-btn" onclick="event.stopPropagation(); openModal('library', ${b.id})"><i class="ti ti-pencil"></i></button>
+      </div>
+      <div class="book-card-info">
+        <div class="book-card-title">${escapeHtml(b.title)}</div>
+        <div class="book-card-author">${escapeHtml(b.author)}</div>
+        ${b.status === 'reading' && tot ? `<div class="card-progress-bar"><div class="card-progress-fill" style="width:${pct}%"></div></div><div style="font-size:10px;color:#7a8099;margin-top:2px;">${pct}\% (pg${cur})</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* RENDER TBR SPECIFIC TABS */
+function renderTbrLog() {
+  const tbody = document.getElementById('tbr-log-tbody');
+  const empty = document.getElementById('tbr-log-empty');
+  if (!tbrBooks.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = tbrBooks.map(b => `
+    <tr>
+      <td>${b.cover ? `<img src="${escapeHtml(b.cover)}" class="cover-thumb" alt="">` : `<div class="cover-placeholder"><i class="ti ti-bookmark" style="color:#9b6bc4;font-size:14px"></i></div>`}</td>
+      <td style="font-size:13px;color:#c9b99a;">${escapeHtml(b.title)}</td>
+      <td style="color:#9aa0b8">${escapeHtml(b.author || '—')}</td>
+      <td>${b.genre ? `<span class="genre-badge" style="background:#2a1e2e;color:#9b6bc4;border-color:#4a2d6a">${escapeHtml(b.genre.split(',')[0].trim())}</span>` : '—'}</td>
+      <td style="color:#7a8099">${escapeHtml(b.format || '—')}</td>
+      <td style="color:#7a8099">${b.pages ? `${b.pages} pgs` : '—'}</td>
+      <td style="color:#7a8099">${escapeHtml(b.series || '—')}</td>
+      <td>
+        <div class="row-actions">
+          <button class="move-btn" onclick="moveTbrToReading(${b.id})" title="Start Reading Now"><i class="ti ti-book"></i></button>
+          <button class="edit-btn" onclick="openModal('tbr', ${b.id})" title="Edit book"><i class="ti ti-pencil"></i></button>
+          <button class="del-btn" onclick="deleteBook(${b.id}, 'tbr')" title="Delete book"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderTbrShelf() {
+  const grid = document.getElementById('tbr-shelf-grid');
+  const empty = document.getElementById('tbr-shelf-empty');
+  if (!tbrBooks.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = tbrBooks.map(b => `
+    <div class="book-card" onclick="openModal('tbr', ${b.id})">
+      <div class="book-cover-wrap">
+        ${b.cover ? `<img src="${escapeHtml(b.cover)}" class="book-cover" alt="">` : `<div class="book-cover-placeholder tbr-placeholder"><span class="book-spine-title">${escapeHtml(b.title)}</span><span class="book-spine-author">${escapeHtml(b.author)}</span></div>`}
+        <button class="book-edit-btn" onclick="event.stopPropagation(); openModal('tbr', ${b.id})"><i class="ti ti-pencil"></i></button>
+      </div>
+      <div class="book-card-info">
+        <div class="book-card-title">${escapeHtml(b.title)}</div>
+        <div class="book-card-author">${escapeHtml(b.author)}</div>
+        <button onclick="event.stopPropagation(); moveTbrToReading(${b.id})" style="background:#2a1e2e;border:1px solid #4a2d6a;color:#9b6bc4;font-size:10px;padding:3px 8px;border-radius:4px;margin-top:6px;cursor:pointer;">Start Reading</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTbrFeatured() {
+  document.getElementById('tbr-summary-box').innerHTML = `
+    <p style="font-size:18px;font-weight:600;color:#8768a3;margin-bottom:4px;">${tbrBooks.length} Books</p>
+    <p style="color:#7a6a58;">waiting on your TBR list</p>
+  `;
+
+  const genreCounts = {};
+  tbrBooks.forEach(b => {
+    if (b.genre) b.genre.split(',').forEach(g => { const k = g.trim(); if(k) genreCounts[k] = (genreCounts[k]||0)+1; });
+  });
+  const topGenres = Object.entries(genreCounts).sort((a,b)=>b[1]-a[1]).slice(0, 4);
+  const maxVal = topGenres[0]?.[1] || 1;
+  
+  document.getElementById('tbr-genre-bars').innerHTML = topGenres.length ? topGenres.map(([g, count]) => `
+    <div class="genre-col">
+      <div class="genre-pillar" style="height:${Math.max(12, Math.round((count/maxVal)*55))}px"></div>
+      <span class="genre-col-label">${escapeHtml(g.substring(0,6))}</span>
+    </div>
+  `).join('') : '<span style="font-size:11px;color:#8768a3;">No genre data</span>';
+
+  for (let c = 1; c <= 3; c++) {
+    for (let s = 1; s <= 5; s++) {
+      document.getElementById(`tbr-shelf-${c}-${s}`).innerHTML = '';
+    }
+  }
+
+  tbrBooks.forEach((b, idx) => {
+    const shelfIndex = idx % 15;
+    const colNum = Math.floor(shelfIndex / 5) + 1;
+    const shelfNum = (shelfIndex % 5) + 1;
+    const shelfEl = document.getElementById(`tbr-shelf-${colNum}-${shelfNum}`);
+
+    if (shelfEl) {
+      const color = TBR_PALETTE[idx % TBR_PALETTE.length];
+      const spine = document.createElement('div');
+      spine.className = 'cozy-spine-v';
+      spine.style.backgroundColor = color;
+      spine.title = `${b.title} by ${b.author}`;
+      spine.textContent = b.title;
+      spine.onclick = () => openModal('tbr', b.id);
+      shelfEl.appendChild(spine);
+    }
+  });
+}
+
+function renderFeatured() {
+  const cr = libraryBooks.find(b => b.status === 'reading') || libraryBooks[0];
+  const crWrap = document.getElementById('cozy-cr-wrap');
+  
+  if (cr) {
+    const cur = cr.currentPage || 0;
+    const tot = cr.pages || 0;
+    const pct = tot > 0 ? Math.min(100, Math.round((cur / tot) * 100)) : 0;
+    crWrap.innerHTML = `
+      <div class="currently-reading-box">
+        ${cr.cover ? `<img src="${escapeHtml(cr.cover)}" class="cr-cover" alt="">` : `<div class="cr-cover" style="display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;padding:4px;color:#5a4d41;">${escapeHtml(cr.title)}</div>`}
+        <div class="cr-info">
+          <table class="cr-table">
+            <tr><td>BOOK TITLE</td><td>${escapeHtml(cr.title)}</td></tr>
+            <tr><td>AUTHOR</td><td>${escapeHtml(cr.author || '—')}</td></tr>
+            <tr><td>GENRE</td><td>${escapeHtml(cr.genre || '—')}</td></tr>
+            <tr><td>PROGRESS</td><td>${tot ? `Page ${cur} of ${tot} (${pct}%)` : '—'}</td></tr>
+          </table>
+          ${cr.status === 'reading' ? `<div class="cozy-progress-wrap"><div class="cozy-progress-bg"><div class="cozy-progress-fill" style="width:${pct}%"></div></div><button class="cozy-log-btn" onclick="openProgressModal(${cr.id})"><i class="ti ti-bookmarks"></i> update progress</button></div>` : ''}
+        </div>
+      </div>
+    `;
+    if (cr.thoughts) document.getElementById('cozy-quote-box').textContent = `"${cr.thoughts}"`;
+  } else {
+    crWrap.innerHTML = `<p style="font-size:12px;color:#a38f78;text-align:center;padding:12px;">No active read selected.</p>`;
+  }
+
+  const genreCounts = {};
+  libraryBooks.forEach(b => { if (b.genre) { const g = b.genre.split(',')[0].trim(); genreCounts[g] = (genreCounts[g] || 0) + 1; } });
+  const topGenres = Object.entries(genreCounts).sort((a,b)=>b[1]-a[1]).slice(0, 4);
+  const maxVal = topGenres[0]?.[1] || 1;
+  document.getElementById('cozy-genre-bars').innerHTML = topGenres.length ? topGenres.map(([g, count]) => `
+    <div class="genre-col"><div class="genre-pillar" style="height:${Math.max(12, Math.round((count/maxVal)*55))}px"></div><span class="genre-col-label">${escapeHtml(g.substring(0,6))}</span></div>
+  `).join('') : '<span style="font-size:11px;color:#a38f78;">No genre data</span>';
+
+  for (let c = 1; c <= 3; c++) {
+    for (let s = 1; s <= 5; s++) {
+      document.getElementById(`shelf-${c}-${s}`).innerHTML = '';
+    }
+  }
+
+  libraryBooks.forEach((b, idx) => {
+    const shelfIndex = idx % 15;
+    const colNum = Math.floor(shelfIndex / 5) + 1;
+    const shelfNum = (shelfIndex % 5) + 1;
+    const shelfEl = document.getElementById(`shelf-${colNum}-${shelfNum}`);
+
+    if (shelfEl) {
+      const color = COZY_PALETTE[idx % COZY_PALETTE.length];
+      const spine = document.createElement('div');
+      spine.className = 'cozy-spine-v';
+      spine.style.backgroundColor = color;
+      spine.title = `${b.title} by ${b.author}`;
+      spine.textContent = b.title;
+      spine.onclick = () => openModal('library', b.id);
+      shelfEl.appendChild(spine);
+    }
+  });
+}
+
+function renderBarChart(containerId, dataMap, maxItems = 5) {
+  const container = document.getElementById(containerId);
+  const entries = Object.entries(dataMap).sort((a,b) => b[1] - a[1]).slice(0, maxItems);
+  const maxVal = entries[0]?.[1] || 1;
+  if (!entries.length) { container.innerHTML = '<p style="color:#3a4060;font-size:12px;padding:8px 0;">No data recorded</p>'; return; }
+  container.innerHTML = entries.map(([label, count], i) => `
+    <div class="bar-row">
+      <span class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((count/maxVal)*100)}%;background:${PALETTE[i % PALETTE.length]}"></div></div>
+      <span class="bar-count">${count}</span>
+    </div>
+  `).join('');
+}
+
+function renderDonutChart(canvasId, legendId, dataMap, colorScheme) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const total = Object.values(dataMap).reduce((a,b) => a + b, 0);
+  ctx.clearRect(0,0,100,100);
+
+  if (total > 0) {
+    let angle = -Math.PI / 2;
+    Object.entries(dataMap).forEach(([key, val], idx) => {
+      if (!val) return;
+      const slice = (val / total) * Math.PI * 2;
+      ctx.beginPath(); ctx.moveTo(50, 50); ctx.arc(50, 50, 44, angle, angle + slice); ctx.closePath();
+      ctx.fillStyle = colorScheme[key] || PALETTE[idx % PALETTE.length]; ctx.fill();
+      angle += slice;
+    });
+    ctx.beginPath(); ctx.arc(50, 50, 28, 0, Math.PI * 2); ctx.fillStyle = '#1a1f2e'; ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(50, 50, 44, 0, Math.PI * 2); ctx.fillStyle = '#2d3650'; ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 50, 28, 0, Math.PI * 2); ctx.fillStyle = '#1a1f2e'; ctx.fill();
+  }
+
+  const legend = document.getElementById(legendId);
+  if (!total) { legend.innerHTML = '<span style="font-size:11px;color:#4a5570;">No data</span>'; return; }
+  legend.innerHTML = Object.entries(dataMap).map(([key, val], idx) => {
+    const c = colorScheme[key] || PALETTE[idx % PALETTE.length];
+    return `<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${escapeHtml(key)}: ${val}</div>`;
+  }).join('');
+}
+
+function renderDashboard() {
+  const read = libraryBooks.filter(b => b.status === 'read');
+  const totalPages = libraryBooks.reduce((a,b) => a + (b.pages || 0), 0);
+  const totalWords = libraryBooks.reduce((a,b) => a + (b.wordCount || 0), 0);
+  const arcs = libraryBooks.filter(b => b.arc).length;
+  const rereads = libraryBooks.filter(b => b.reread).length;
+  const cried = libraryBooks.filter(b => b.cry).length;
+  const newAuthors = libraryBooks.filter(b => b.newAuthor === 'Yes').length;
+
+  const avgRating = read.filter(b => b.rating).length
+    ? (read.filter(b => b.rating).reduce((a,b) => a + b.rating, 0) / read.filter(b => b.rating).length).toFixed(2)
+    : '—';
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-label">books read</div><div class="stat-value">${read.length}</div><div class="stat-sub">of ${libraryBooks.length} in library</div></div>
+    <div class="stat-card"><div class="stat-label">total pages</div><div class="stat-value">${totalPages.toLocaleString()}</div><div class="stat-sub">${totalWords ? totalWords.toLocaleString() + ' words' : 'pages logged'}</div></div>
+    <div class="stat-card"><div class="stat-label">avg rating</div><div class="stat-value">${avgRating}</div><div class="stat-sub">stars</div></div>
+    <div class="stat-card"><div class="stat-label">new authors</div><div class="stat-value">${newAuthors}</div><div class="stat-sub">discovered</div></div>
+    <div class="stat-card"><div class="stat-label">highlights</div><div class="stat-value">${cried} 😭</div><div class="stat-sub">${arcs} ARCs • ${rereads} Re-reads</div></div>
+  `;
+
+  const genreMap = {}; libraryBooks.forEach(b => { if (b.genre) b.genre.split(',').forEach(g => { const k = g.trim(); if(k) genreMap[k] = (genreMap[k]||0)+1; }); });
+  renderBarChart('genre-chart', genreMap);
+
+  const subgenreMap = {}; libraryBooks.forEach(b => { if (b.subgenre) b.subgenre.split(',').forEach(s => { const k = s.trim(); if(k) subgenreMap[k] = (subgenreMap[k]||0)+1; }); });
+  renderBarChart('subgenre-chart', subgenreMap);
+
+  const formatMap = {}; libraryBooks.forEach(b => { const f = b.format || 'Unspecified'; formatMap[f] = (formatMap[f] || 0) + 1; });
+  renderDonutChart('format-canvas', 'format-legend', formatMap, { 'Physical': '#8b6f47', 'E-Book': '#4c6b8b', 'Audiobook': '#4a7c59', 'Unspecified': '#3a4060' });
+
+  const seriesMap = {}; libraryBooks.forEach(b => { if (b.seriesStatus) seriesMap[b.seriesStatus] = (seriesMap[b.seriesStatus] || 0) + 1; });
+  renderBarChart('series-chart', seriesMap);
+
+  const acquiredMap = {}; libraryBooks.forEach(b => { if (b.acquired) acquiredMap[b.acquired] = (acquiredMap[b.acquired] || 0) + 1; });
+  renderBarChart('acquired-chart', acquiredMap);
+
+  const statusCounts = { 'read': libraryBooks.filter(b=>b.status==='read').length, 'reading': libraryBooks.filter(b=>b.status==='reading').length };
+  renderDonutChart('donut-canvas', 'donut-legend', statusCounts, { 'read': '#4a7c59', 'reading': '#4c6b8b' });
+
+  const narratorMap = {}; libraryBooks.forEach(b => { if (b.narrator) narratorMap[b.narrator] = (narratorMap[b.narrator] || 0) + 1; });
+  renderBarChart('narrator-chart', narratorMap);
+
+  const monthCounts = Array(12).fill(0);
+  libraryBooks.filter(b=>b.date&&b.status==='read').forEach(b => { const m = new Date(b.date).getMonth(); if(m>=0&&m<12) monthCounts[m]++; });
+  const maxM = Math.max(...monthCounts, 1);
+  document.getElementById('monthly-chart').innerHTML = monthCounts.map((c) => `<div class="month-bar-wrap"><div class="month-bar${c?` has-books`:''}" style="height:${Math.round((c/maxM)*52)+4}px"></div></div>`).join('');
+
+  document.getElementById('recent-list').innerHTML = libraryBooks.slice(0,5).map(b => `
+    <div class="recent-book">
+      ${b.cover ? `<img src="${escapeHtml(b.cover)}" class="recent-cover" alt="">` : `<div class="recent-cover"></div>`}
+      <div class="recent-info"><div class="recent-book-title">${escapeHtml(b.title)}</div><div class="recent-book-author">${escapeHtml(b.author)}</div></div>
+      ${b.rating ? `<span style="color:#8b6f47;font-size:12px">${renderStarsFormatted(b.rating)}</span>` : ''}
+    </div>`).join('') || '<p style="color:#3a4060;font-size:13px">no books yet</p>';
+}
+
+function renderAll() {
+  renderLog();
+  renderShelf();
+  renderFeatured();
+  renderDashboard();
+  renderTbrLog();
+  renderTbrShelf();
+  renderTbrFeatured();
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs = ['log','shelf','featured','dashboard','tbr-log','tbr-shelf','tbr-featured'];
+  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
+  
+  if (id === 'featured') renderFeatured();
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'tbr-log') renderTbrLog();
+  if (id === 'tbr-shelf') renderTbrShelf();
+  if (id === 'tbr-featured') renderTbrFeatured();
+}
+
+document.getElementById('modal-bg').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('progress-modal-bg').addEventListener('click', e => { if(e.target===e.currentTarget) closeProgressModal(); });
+
+renderAll();
+</script>
+</body>
+</html>
