@@ -6,52 +6,48 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS and JSON body parsing
 app.use(cors());
 app.use(express.json());
 
-// Connect to Neon PostgreSQL using DATABASE_URL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Serve frontend static files (index.html, CSS, client JS)
+// Serve static assets from the current directory
 app.use(express.static(__dirname));
 
-// --- API ENDPOINTS ---
-
-// GET all books
+// GET API: Fetch all books
 app.get('/api/books', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM books ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
-    console.error('Error fetching books:', err);
-    res.status(500).json({ error: 'Database query failed' });
+    res.status(500).json({ error: 'Failed to fetch books' });
   }
 });
 
-// POST a new book
+// POST API: Save book
 app.post('/api/books', async (req, res) => {
-  const { title, author, status } = req.body;
   try {
-    const result = await pool.query(
-      'INSERT INTO books (title, author, status) VALUES ($1, $2, $3) RETURNING *',
-      [title, author, status || 'To Read']
-    );
+    const keys = Object.keys(req.body);
+    const values = Object.values(req.body);
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+    const columns = keys.join(', ');
+
+    const query = `INSERT INTO books (${columns}) VALUES (${placeholders}) RETURNING *`;
+    const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Error adding book:', err);
-    res.status(500).json({ error: 'Failed to insert book' });
+    res.status(500).json({ error: 'Failed to save book' });
   }
 });
 
-// Serve index.html for any direct web page requests
+// Fallback route: Serve bookish_reading_tracker.html (or index.html)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'bookish_reading_tracker.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
