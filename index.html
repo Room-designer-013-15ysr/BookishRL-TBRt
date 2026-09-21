@@ -3,779 +3,777 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bookish Reading Tracker & TBR Hub</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <title>2026 Bookish Hub - Emma Skies Tracker</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f1117; color: #e8e0d4; }
-    
-    .app { min-height: 100vh; background: #0f1117; }
-
-    /* LINK CABLE GITHUB SYNC BAR */
-    .sync-bar { background: #1a1f2e; border-bottom: 1px solid #2d3650; padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .sync-bar h3 { font-size: 13px; font-weight: 600; color: #c9b99a; margin-right: 10px; display: flex; align-items: center; gap: 6px; }
-    .sync-bar input { background: #0f1117; border: 1px solid #2d3650; color: #e8e0d4; padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 170px; }
-    .sync-btn { background: #3d2b1f; border: 1px solid #6b4c35; color: #c9b99a; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; }
-    .sync-btn:hover { background: #4f3828; }
-    .sync-btn-now { background: #1e2a1e; border-color: #2d4a2d; color: #6b9e6b; }
-    .sync-btn-now:hover { background: #273b27; }
-    #sync-status { font-size: 11px; color: #7a8099; margin-left: auto; font-weight: 500; }
-
-    .nav { background: #1a1f2e; border-bottom: 1px solid #2d3650; padding: 0 20px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
-    .nav-logo { font-size: 15px; font-weight: 500; color: #c9b99a; padding: 14px 0; margin-right: 24px; letter-spacing: 0.5px; }
-    .nav-divider { width: 1px; height: 20px; background: #2d3650; margin: 0 8px; }
-    .nav-tab { padding: 14px 14px; font-size: 13px; color: #7a8099; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; }
-    .nav-tab.active { color: #c9b99a; border-bottom-color: #8b6f47; }
-    .nav-tab.tbr-tab.active { color: #9b6bc4; border-bottom-color: #6b4c8b; }
-    .nav-tab:hover:not(.active) { color: #b0b8d0; }
-
-    .page { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
-    .page.active { display: block; }
-
-    .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .log-header h2 { font-size: 18px; font-weight: 500; color: #c9b99a; }
-    .log-header.tbr-header h2 { color: #9b6bc4; }
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    
-    .add-btn { background: #3d2b1f; border: 1px solid #6b4c35; color: #c9b99a; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    .add-btn:hover { background: #4f3828; }
-    .add-btn.tbr-btn { background: #2a1e2e; border-color: #4a2d6a; color: #9b6bc4; }
-    .add-btn.tbr-btn:hover { background: #39283e; }
-    
-    .data-btn { background: #1a1f2e; border: 1px solid #2d3650; color: #7a8099; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .data-btn:hover { color: #c9b99a; border-color: #4a5570; }
-
-    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; }
-    .modal-bg.open { display: flex; }
-    .modal { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 12px; padding: 24px; width: 620px; max-width: 95vw; max-height: 85vh; overflow-y: auto; }
-    .modal h3 { font-size: 16px; font-weight: 500; color: #c9b99a; margin-bottom: 16px; }
-    .modal label { font-size: 12px; color: #7a8099; display: block; margin-bottom: 4px; margin-top: 12px; }
-    .modal input, .modal select, .modal textarea { width: 100%; background: #0f1117; border: 1px solid #2d3650; color: #e8e0d4; padding: 8px 10px; border-radius: 6px; font-size: 13px; font-family: inherit; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-    .form-col-full { grid-column: 1 / -1; }
-    
-    .modal-actions { display: flex; gap: 8px; margin-top: 24px; }
-    .btn-save { flex: 1; background: #3d2b1f; border: 1px solid #6b4c35; color: #c9b99a; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-    .btn-save:hover { background: #4f3828; }
-    .btn-cancel { flex: 1; background: transparent; border: 1px solid #2d3650; color: #7a8099; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-
-    .rating-control { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
-    .stars-input { display: flex; gap: 4px; }
-    .star-wrapper { position: relative; display: inline-block; font-size: 20px; cursor: pointer; color: #2d3650; user-select: none; }
-    .star-wrapper .star-fill { position: absolute; top: 0; left: 0; overflow: hidden; color: #8b6f47; width: 0%; pointer-events: none; }
-    .rating-num-input { width: 70px !important; text-align: center; }
-
-    .log-table-container { overflow-x: auto; }
-    .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .log-table th { text-align: left; padding: 10px; color: #7a8099; font-weight: 400; border-bottom: 1px solid #2d3650; font-size: 12px; white-space: nowrap; }
-    .log-table td { padding: 10px; border-bottom: 1px solid #1e2438; vertical-align: middle; white-space: nowrap; }
-    .log-table tr:hover td { background: #1a1f2e; }
-    .cover-thumb { width: 34px; height: 50px; border-radius: 4px; object-fit: cover; background: #2d3650; display: block; }
-    .cover-placeholder { width: 34px; height: 50px; border-radius: 4px; background: #2d3650; display: flex; align-items: center; justify-content: center; }
-    .genre-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #1e2a1e; color: #6b9e6b; border: 1px solid #2d4a2d; }
-    .rating-display { color: #8b6f47; letter-spacing: 1px; font-size: 12px; }
-    .del-btn, .edit-btn, .track-btn, .move-btn { background: none; border: none; color: #7a8099; cursor: pointer; font-size: 15px; padding: 4px; border-radius: 4px; }
-    .del-btn:hover { color: #c0392b; background: #1e1215; }
-    .edit-btn:hover { color: #c9b99a; background: #1e2438; }
-    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    .status-read { background: #1e2a1e; color: #6b9e6b; border: 1px solid #2d4a2d; }
-    .status-reading { background: #1e2238; color: #6b87c4; border: 1px solid #2d3a6a; }
-    .status-tbr { background: #2a1e2e; color: #9b6bc4; border: 1px solid #4a2d6a; }
-    .empty-state { text-align: center; padding: 48px 20px; color: #3a4060; }
-    .empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
-
-    /* BOOKSHELF GALLERY PAGE */
-    .shelf-filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .filter-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #2d3650; background: transparent; color: #7a8099; transition: all 0.15s; }
-    .filter-btn.active { background: #3d2b1f; border-color: #6b4c35; color: #c9b99a; }
-    
-    .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 28px 20px; align-items: start; }
-    .book-card { display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; position: relative; }
-    .book-cover-wrap { position: relative; width: 100%; aspect-ratio: 2/3; margin-bottom: 10px; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4); background: #1a1f2e; border: 1px solid #2d3650; }
-    .book-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .book-cover-placeholder { width: 100%; height: 100%; background: linear-gradient(145deg, #1e2a3a 0%, #2d3650 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; text-align: center; }
-    .book-cover-placeholder.tbr-placeholder { background: linear-gradient(145deg, #2a1e2e 0%, #3d2b50 100%); }
-    .book-cover-placeholder .book-spine-title { font-size: 12px; color: #c9b99a; line-height: 1.3; font-weight: 500; }
-    .book-cover-placeholder .book-spine-author { font-size: 10px; color: #7a8099; margin-top: 2px; }
-    
-    .book-card-info { width: 100%; text-align: center; padding: 0 2px; }
-    .book-card-title { font-size: 13px; color: #e8e0d4; font-weight: 500; line-height: 1.35; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; }
-    .book-card-author { font-size: 11px; color: #7a8099; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* REALISTIC COZY LIBRARY PAGE */
-    .cozy-library-wrap { background: #e8e1d7; color: #4a3e3d; border-radius: 12px; padding: 24px; border: 2px solid #d4c8b8; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
-    .cozy-library-wrap.tbr-cozy { background: #e3dbe8; border-color: #cbbcd4; }
-    .cozy-top-dashboard { display: grid; grid-template-columns: 2fr 1.5fr 1fr; gap: 16px; margin-bottom: 24px; align-items: stretch; }
-    @media (max-width: 900px) { .cozy-top-dashboard { grid-template-columns: 1fr; } }
-
-    .cozy-card { background: #f4efe8; border: 1px solid #d8cdbe; border-radius: 8px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; }
-    .tbr-cozy .cozy-card { background: #f2eef5; border-color: #d4c7dc; }
-    .cozy-card-header { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #a38f78; border-bottom: 1px solid #e0d6c8; padding-bottom: 4px; margin-bottom: 10px; text-align: center; }
-
-    .cr-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .cr-table td { padding: 2px 4px; border-bottom: 1px solid #e8dfd3; }
-
-    .quote-box { text-align: center; font-style: italic; font-family: Georgia, serif; font-size: 13px; color: #5a4d41; justify-content: center; padding: 12px; }
-
-    .genre-bars { display: flex; justify-content: space-around; align-items: flex-end; height: 75px; padding-top: 10px; }
-    .genre-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-    .genre-pillar { width: 16px; background: #b89b82; border-radius: 2px 2px 0 0; min-height: 4px; }
-
-    /* 3-COLUMN BOOKCASE */
-    .bookcases-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative; }
-    @media (max-width: 900px) { .bookcases-container { grid-template-columns: 1fr; } }
-
-    .bookcase-col { background: #eddcd0; border: 8px solid #c2a792; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); padding: 8px; position: relative; }
-    .tbr-cozy .bookcase-col { background: #e3d2eb; border-color: #aa91bd; }
-    .hanging-plant { position: absolute; top: -12px; right: -8px; font-size: 22px; color: #5a7c50; z-index: 5; pointer-events: none; }
-    
-    .cozy-shelf { background: #f8f5f0; border-bottom: 12px solid #b3957d; min-height: 110px; margin-bottom: 12px; padding: 8px 8px 0 8px; display: flex; align-items: flex-end; gap: 3px; position: relative; overflow: hidden; }
-    .cozy-spine-v { 
-      height: 75px; width: 18px; border-radius: 2px 2px 0 0; display: flex; align-items: center; justify-content: center; 
-      writing-mode: vertical-rl; transform: rotate(180deg); font-size: 9px; font-weight: 600; color: #fff; cursor: pointer; 
-      padding: 4px 0; box-shadow: inset 1px 0 2px rgba(255,255,255,0.3), 1px 0 3px rgba(0,0,0,0.15); white-space: nowrap; 
-      overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; transition: transform 0.15s;
+    :root {
+      --bg-dark: #12131C;
+      --card-bg: #1C1E2D;
+      --accent-brown: #5C4033;
+      --accent-light: #8B5A2B;
+      --text-main: #E2E8F0;
+      --text-muted: #94A3B8;
+      --border-color: #2D3748;
     }
-    .cozy-spine-v:hover { transform: rotate(180deg) translateY(-4px); }
 
-    /* DASHBOARD PAGE */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 10px; padding: 14px 16px; }
-    .stat-label { font-size: 11px; color: #7a8099; margin-bottom: 6px; }
-    .stat-value { font-size: 20px; font-weight: 500; color: #c9b99a; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
-    .chart-card { background: #1a1f2e; border: 1px solid #2d3650; border-radius: 10px; padding: 16px; }
-    .chart-title { font-size: 12px; color: #7a8099; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Top Navigation Tabs */
+    .nav-tabs, .sub-tabs {
+      display: flex;
+      gap: 15px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 5px 10px;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      border-bottom: 2px solid var(--accent-light);
+    }
+
+    /* Section Views */
+    .view-section {
+      display: none;
+    }
+    .view-section.active {
+      display: block;
+    }
+
+    /* Action Buttons */
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-add {
+      background-color: var(--accent-brown);
+      color: #fff;
+    }
+
+    /* Reading Log Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      background-color: var(--card-bg);
+    }
+
+    /* Gallery / Bookshelf Display */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .book-card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .book-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 4px;
+      background-color: #2a2d3d;
+    }
+
+    .book-card .title {
+      font-weight: bold;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-card .author {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    /* Dashboard Cards */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .dash-card {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .dash-card h4 {
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+
+    .dash-card .count {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    /* Modal Styling */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 15px;
+    }
+
+    .modal-bg.active {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--card-bg);
+      padding: 25px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal h3 {
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .section-label {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--accent-light);
+      margin: 15px 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 15px;
+    }
   </style>
 </head>
 <body>
 
-<div class="app">
-
-  <!-- ================= GITHUB BACKEND LINK CABLE BAR ================= -->
-  <div class="sync-bar">
-    <h3><i class="ti ti-plug-connected"></i> 90s Link Cable Settings</h3>
-    <input type="text" id="gh-owner" placeholder="GitHub Username">
-    <input type="text" id="gh-repo" placeholder="Repo Name (BookishRL-TBRt)">
-    <input type="password" id="gh-token" placeholder="Paste Token (ghp_...)">
-    <button class="sync-btn" onclick="saveGitHubSettings()">Save Cable</button>
-    <button class="sync-btn sync-btn-now" onclick="syncNow()"><i class="ti ti-refresh"></i> Sync Now</button>
-    <div id="sync-status">Status: Standby</div>
+  <!-- Top Navigation Header -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchMainTab('hub')">📚 bookish hub</button>
+    <button class="tab-btn" onclick="switchMainTab('log')">reading log</button>
+    <button class="tab-btn" onclick="switchMainTab('bookshelf')">bookshelf</button>
   </div>
 
-  <!-- NAVIGATION BAR -->
-  <div class="nav">
-    <span class="nav-logo">📚 bookish hub</span>
-    <!-- LIBRARY TABS -->
-    <button class="nav-tab active" onclick="showPage('log')">reading log</button>
-    <button class="nav-tab" onclick="showPage('shelf')">bookshelf</button>
-    <button class="nav-tab" onclick="showPage('featured')">library display</button>
-    <button class="nav-tab" onclick="showPage('dashboard')">dashboard</button>
-    
-    <div class="nav-divider"></div>
-
-    <!-- TBR TABS -->
-    <button class="nav-tab tbr-tab" onclick="showPage('tbr-log')">tbr log</button>
-    <button class="nav-tab tbr-tab" onclick="showPage('tbr-shelf')">tbr shelf</button>
-    <button class="nav-tab tbr-tab" onclick="showPage('tbr-featured')">tbr display</button>
+  <!-- Sub Navigation -->
+  <div class="sub-tabs">
+    <button class="tab-btn active" onclick="switchSubTab('log')">library display</button>
+    <button class="tab-btn" onclick="switchSubTab('dashboard')">dashboard</button>
   </div>
 
-  <!-- 1. MAIN LIBRARY READING LOG PAGE -->
-  <div class="page active" id="page-log">
-    <div class="log-header">
-      <h2>my reading log</h2>
-      <div class="header-actions">
-        <button class="data-btn" onclick="exportData('library')"><i class="ti ti-download"></i> export library.json</button>
-        <button class="data-btn" onclick="triggerImport('library')"><i class="ti ti-upload"></i> import library.json</button>
-        <button class="add-btn" onclick="openModal('library')"><i class="ti ti-plus"></i> add book</button>
-      </div>
+  <!-- VIEW 1: READING LOG TABLE -->
+  <div id="view-log" class="view-section active">
+    <h2>my reading log</h2>
+    <br>
+    <div class="action-bar">
+      <button class="btn btn-add" onclick="openModal()">+ add book</button>
     </div>
-    <div class="log-table-container">
-      <table class="log-table">
+
+    <div class="table-container">
+      <table>
         <thead>
           <tr>
-            <th style="width:42px"></th>
-            <th>title</th>
-            <th>author</th>
-            <th>genre</th>
-            <th>format</th>
-            <th>status</th>
-            <th>rating</th>
-            <th style="width:100px">actions</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>New Author</th>
+            <th>Genre</th>
+            <th>Sub-Genre(s)</th>
+            <th>Age Range</th>
+            <th>Rating</th>
+            <th>Format</th>
+            <th>Pages</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Days</th>
+            <th>Author Gender</th>
+            <th>BIPOC</th>
+            <th>Series</th>
+            <th>Queer Rep</th>
+            <th>Cry?</th>
+            <th>ARC</th>
+            <th>Re-read</th>
+            <th>Lower TBR</th>
+            <th>Acquired From</th>
+            <th>Narrator</th>
+            <th>Recommended By</th>
           </tr>
         </thead>
-        <tbody id="log-tbody"></tbody>
-      </table>
-      <div id="log-empty" class="empty-state" style="display:none">
-        <i class="ti ti-book"></i>
-        <p style="font-size:14px">no books in library — add your first one!</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. MAIN LIBRARY BOOKSHELF -->
-  <div class="page" id="page-shelf">
-    <div class="shelf-filters">
-      <button class="filter-btn active" onclick="filterShelf('all',this)">all books</button>
-      <button class="filter-btn" onclick="filterShelf('read',this)">read</button>
-      <button class="filter-btn" onclick="filterShelf('reading',this)">currently reading</button>
-    </div>
-    <div class="shelf-grid" id="shelf-grid"></div>
-  </div>
-
-  <!-- 3. MAIN LIBRARY DISPLAY -->
-  <div class="page" id="page-featured">
-    <div class="cozy-library-wrap">
-      <div class="cozy-top-dashboard">
-        <div class="cozy-card">
-          <div class="cozy-card-header">currently reading</div>
-          <div id="cozy-cr-wrap"><p style="font-size:11px;color:#8c765c;">No book currently being read.</p></div>
-        </div>
-        <div class="cozy-card">
-          <div class="cozy-card-header">favorite quote / notes</div>
-          <div class="quote-box">"A room without books is like a body without a soul."</div>
-        </div>
-        <div class="cozy-card">
-          <div class="cozy-card-header">genre overview</div>
-          <div class="genre-bars" id="cozy-genre-bars"></div>
-        </div>
-      </div>
-      <div class="bookcases-container">
-        <div class="bookcase-col"><div class="hanging-plant">🪴</div><div class="cozy-shelf" id="shelf-1-1"></div><div class="cozy-shelf" id="shelf-1-2"></div></div>
-        <div class="bookcase-col"><div class="cozy-shelf" id="shelf-2-1"></div><div class="cozy-shelf" id="shelf-2-2"></div></div>
-        <div class="bookcase-col"><div class="hanging-plant">🌿</div><div class="cozy-shelf" id="shelf-3-1"></div><div class="cozy-shelf" id="shelf-3-2"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. DASHBOARD PAGE -->
-  <div class="page" id="page-dashboard">
-    <div class="stats-row" id="stats-row"></div>
-  </div>
-
-  <!-- 5. TBR LOG (SPREADSHEET) PAGE -->
-  <div class="page" id="page-tbr-log">
-    <div class="log-header tbr-header">
-      <h2>to-be-read list (tbr)</h2>
-      <div class="header-actions">
-        <button class="data-btn" onclick="exportData('tbr')"><i class="ti ti-download"></i> export tbr.json</button>
-        <button class="data-btn" onclick="triggerImport('tbr')"><i class="ti ti-upload"></i> import tbr.json</button>
-        <button class="add-btn tbr-btn" onclick="openModal('tbr')"><i class="ti ti-plus"></i> add tbr book</button>
-      </div>
-    </div>
-    <div class="log-table-container">
-      <table class="log-table">
-        <thead>
-          <tr>
-            <th style="width:42px"></th>
-            <th>title</th>
-            <th>author</th>
-            <th>genre</th>
-            <th>format</th>
-            <th>actions</th>
-          </tr>
-        </thead>
-        <tbody id="tbr-log-tbody"></tbody>
+        <tbody id="books-table-body">
+          <!-- Rendered dynamically -->
+        </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 6. TBR BOOKSHELF PAGE -->
-  <div class="page" id="page-tbr-shelf">
-    <div class="shelf-grid" id="tbr-shelf-grid"></div>
+  <!-- VIEW 2: BOOKSHELF GALLERY -->
+  <div id="view-bookshelf" class="view-section">
+    <h2>my bookshelf</h2>
+    <div class="gallery-grid" id="books-gallery">
+      <!-- Rendered dynamically -->
+    </div>
   </div>
 
-  <!-- 7. TBR LIBRARY DISPLAY PAGE -->
-  <div class="page" id="page-tbr-featured">
-    <div class="cozy-library-wrap tbr-cozy">
-      <div class="bookcases-container">
-        <div class="bookcase-col"><div class="cozy-shelf" id="tbr-shelf-1-1"></div></div>
-        <div class="bookcase-col"><div class="cozy-shelf" id="tbr-shelf-2-1"></div></div>
-        <div class="bookcase-col"><div class="cozy-shelf" id="tbr-shelf-3-1"></div></div>
+  <!-- VIEW 3: DASHBOARD STATS -->
+  <div id="view-dashboard" class="view-section">
+    <h2>dashboard</h2>
+    <br>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h4>Total Library Books</h4>
+        <div class="count" id="stat-total">0</div>
+      </div>
+      <div class="dash-card">
+        <h4>Currently Reading</h4>
+        <div class="count" id="stat-reading">0</div>
+      </div>
+      <div class="dash-card">
+        <h4>TBR Queue</h4>
+        <div class="count" id="stat-tbr">0</div>
+      </div>
+      <div class="dash-card">
+        <h4>Books Read This Month</h4>
+        <div class="count" id="stat-read-month">0</div>
       </div>
     </div>
   </div>
 
-</div>
+  <!-- ADD / EDIT BOOK MODAL WITH ALL EMMA SKIES SPREADSHEET FIELDS -->
+  <div class="modal-bg" id="modal-bg">
+    <div class="modal">
+      <h3>Add a Book — Emma Skies 2026 Tracker</h3>
+      
+      <!-- 1. BOOK & AUTHOR INFO -->
+      <div class="section-label">Book & Author Basics</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="f-title" placeholder="Book Title">
+        </div>
 
-<!-- HIDDEN IMPORT INPUT -->
-<input type="file" id="import-file" accept=".json" style="display:none" onchange="handleFileImport(event)">
+        <div class="form-group">
+          <label>Author</label>
+          <input type="text" id="f-author" placeholder="Author Name">
+        </div>
 
-<!-- ADD/EDIT BOOK MODAL -->
-<div class="modal-bg" id="modal-bg">
-  <div class="modal">
-    <h3 id="modal-title">Add a Book</h3>
-    <input type="hidden" id="edit-id">
-    <input type="hidden" id="modal-type" value="library">
+        <div class="form-group">
+          <label>New Author?</label>
+          <select id="f-new-author">
+            <option value="False">No (Read Before)</option>
+            <option value="True">Yes (New Author)</option>
+          </select>
+        </div>
 
-    <div class="form-grid">
-      <div class="form-col-full">
-        <label>Title</label>
-        <input type="text" id="f-title" placeholder="Book Title">
-      </div>
-      <div>
-        <label>Author</label>
-        <input type="text" id="f-author" placeholder="Author Name">
-      </div>
-      <div>
-        <label>Genre</label>
-        <input type="text" id="f-genre" placeholder="Fantasy, Sci-Fi, etc.">
-      </div>
-      <div>
-        <label>Format</label>
-        <select id="f-format">
-          <option value="Physical">Physical</option>
-          <option value="E-Book">E-Book</option>
-          <option value="Audiobook">Audiobook</option>
-        </select>
-      </div>
-      <div>
-        <label>Status / List</label>
-        <select id="f-status">
-          <option value="read">Read (Library)</option>
-          <option value="reading">Currently Reading (Library)</option>
-          <option value="tbr">To Be Read (TBR List)</option>
-        </select>
-      </div>
-      <div>
-        <label>Rating (0 to 5)</label>
-        <input type="number" id="f-rating-num" step="0.25" min="0" max="5" placeholder="5.0">
-      </div>
-      <div class="form-col-full">
-        <label>Cover Image URL</label>
-        <input type="text" id="f-cover" placeholder="https://...">
-      </div>
-    </div>
+        <div class="form-group">
+          <label>Author Gender</label>
+          <select id="f-author-gender">
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Non-Binary">Non-Binary</option>
+            <option value="Multiple/Other">Multiple / Other</option>
+          </select>
+        </div>
 
-    <div class="modal-actions">
-      <button class="btn-save" onclick="saveBookFromModal()">Save Book</button>
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <div class="form-group">
+          <label>BIPOC Author?</label>
+          <select id="f-bipoc">
+            <option value="False">No</option>
+            <option value="True">Yes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Age Range</label>
+          <select id="f-age-range">
+            <option value="Young Adult">Young Adult</option>
+            <option value="Adult">Adult</option>
+            <option value="Middle Grade">Middle Grade</option>
+            <option value="New Adult">New Adult</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. GENRE & SERIES -->
+      <div class="section-label">Genre & Series Info</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Genre</label>
+          <input type="text" id="f-genre" placeholder="Romance, Fantasy, Sci-Fi, etc.">
+        </div>
+
+        <div class="form-group">
+          <label>Sub-Genre(s)</label>
+          <input type="text" id="f-subgenre" placeholder="Contemporary, Queer, Magic, etc.">
+        </div>
+
+        <div class="form-group">
+          <label>Series Status</label>
+          <select id="f-series">
+            <option value="Standalone">Standalone</option>
+            <option value="Series: Start">Series: Start</option>
+            <option value="Series: Cont.">Series: Continuation</option>
+            <option value="Series: Finish">Series: Finish</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Tags</label>
+          <input type="text" id="f-tags" placeholder="Great HEA, Dual POV, Fake Dating">
+        </div>
+      </div>
+
+      <!-- 3. FORMAT & READING METRICS -->
+      <div class="section-label">Format & Reading Metrics</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Format</label>
+          <select id="f-format">
+            <option value="Paperback">Paperback</option>
+            <option value="Hardcover">Hardcover</option>
+            <option value="E-Book">E-Book</option>
+            <option value="Audiobook">Audiobook</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Status / List</label>
+          <select id="f-status">
+            <option value="read">Read (Library)</option>
+            <option value="reading">Currently Reading</option>
+            <option value="tbr">To Be Read (TBR)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Page Count</label>
+          <input type="number" id="f-pages" placeholder="350">
+        </div>
+
+        <div class="form-group">
+          <label>Audio Length (hours/mins)</label>
+          <input type="text" id="f-audio-length" placeholder="10h 15m">
+        </div>
+
+        <div class="form-group">
+          <label>Word Count</label>
+          <input type="number" id="f-word-count" placeholder="80000">
+        </div>
+
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="f-start-date">
+        </div>
+
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="f-end-date">
+        </div>
+
+        <div class="form-group">
+          <label>Month Read</label>
+          <select id="f-month-read">
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 4. RATING, QUEER REP & REVIEWS -->
+      <div class="section-label">Rating, Representation & Review</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Rating (0 to 5)</label>
+          <input type="number" id="f-rating" step="0.25" min="0" max="5" placeholder="5.0">
+        </div>
+
+        <div class="form-group">
+          <label>Queer Characters?</label>
+          <select id="f-queer-chars">
+            <option value="No">No</option>
+            <option value="Yes - Main & Side">Yes - Main & Side</option>
+            <option value="Yes - Main">Yes - Main</option>
+            <option value="Yes - Side">Yes - Side</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Queer Representation</label>
+          <input type="text" id="f-queer-rep" placeholder="MC & LI, Side couple, etc.">
+        </div>
+
+        <div class="form-group">
+          <label>Did I Cry?</label>
+          <select id="f-cry">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Thoughts / Short Review</label>
+          <textarea id="f-thoughts" placeholder="Your quick review or thoughts..."></textarea>
+        </div>
+      </div>
+
+      <!-- 5. LOGISTICS & ACQUISITION -->
+      <div class="section-label">Acquisition & Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>ARC (Advanced Reader Copy)?</label>
+          <select id="f-arc">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Re-read?</label>
+          <select id="f-reread">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Lower TBR?</label>
+          <select id="f-lower-tbr">
+            <option value="True">Yes</option>
+            <option value="False">No</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Acquired From</label>
+          <input type="text" id="f-acquired" placeholder="Borrowed, Library, Bought, Kindle Unlimited">
+        </div>
+
+        <div class="form-group">
+          <label>Narrated By (Audiobook)</label>
+          <input type="text" id="f-narrator" placeholder="Narrator Name(s)">
+        </div>
+
+        <div class="form-group">
+          <label>Recommended By</label>
+          <input type="text" id="f-recommended" placeholder="Friend, TikTok, Copilot, ChatGPT">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Cover Image URL</label>
+          <input type="text" id="f-cover" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-add" onclick="saveBook()">Save Book</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ================= JAVASCRIPT APP & GITHUB SYNC ENGINE ================= -->
-<script>
-  let library = [];
-  let tbr = [];
-  let currentImportTarget = 'library';
-  const FILE_PATH = 'data.json';
-
-  // Status reporter
-  function setStatus(msg, color = '#7a8099') {
-    const el = document.getElementById('sync-status');
-    if (el) {
-      el.textContent = `Status: ${msg}`;
-      el.style.color = color;
-    }
-  }
-
-  // Page switching logic
-  function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  <script>
+    // REPLACE WITH YOUR LIVE RENDER BACKEND URL ONCE DEPLOYED
+    const API_URL = 'https://my-bookish-api.onrender.com/api/books';
     
-    const targetPage = document.getElementById(`page-${pageId}`);
-    if (targetPage) targetPage.classList.add('active');
+    let localBooks = [];
 
-    const activeTab = Array.from(document.querySelectorAll('.nav-tab')).find(btn => btn.getAttribute('onclick')?.includes(pageId));
-    if (activeTab) activeTab.classList.add('active');
-  }
-
-  /* ================= GITHUB API BACKEND ENGINES ================= */
-  function saveGitHubSettings() {
-    localStorage.setItem('gh_owner', document.getElementById('gh-owner').value.trim());
-    localStorage.setItem('gh_repo', document.getElementById('gh-repo').value.trim());
-    localStorage.setItem('gh_token', document.getElementById('gh-token').value.trim());
-    setStatus('Link Cable Settings Saved!', '#6b9e6b');
-    syncNow();
-  }
-
-  async function loadFromGitHub() {
-    const owner = localStorage.getItem('gh_owner');
-    const repo = localStorage.getItem('gh_repo');
-    const token = localStorage.getItem('gh_token');
-
-    if (!token || !owner || !repo) {
-      setStatus('Missing Link Cable Credentials', '#c0392b');
-      return null;
-    }
-
-    setStatus('Downloading from GitHub Backend...', '#6b87c4');
-
-    try {
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-
-      if (res.status === 404) {
-        setStatus('No data.json found online yet. Save a book to create it!', '#c9b99a');
-        return { library: [], tbr: [] };
-      }
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const fileData = await res.json();
-      localStorage.setItem('gh_file_sha', fileData.sha);
-
-      const decoded = decodeURIComponent(escape(atob(fileData.content)));
-      const parsed = JSON.parse(decoded);
-      setStatus('Synced with GitHub Backend!', '#6b9e6b');
-      return parsed;
-    } catch (err) {
-      console.error(err);
-      setStatus('Cloud load failed!', '#c0392b');
-      return null;
-    }
-  }
-
-  async function saveToGitHub(payloadData) {
-    const owner = localStorage.getItem('gh_owner');
-    const repo = localStorage.getItem('gh_repo');
-    const token = localStorage.getItem('gh_token');
-    const sha = localStorage.getItem('gh_file_sha');
-
-    if (!token || !owner || !repo) {
-      setStatus('Saved locally only (Fill Link Cable credentials to sync)', '#c0392b');
-      return;
-    }
-
-    setStatus('Uploading to GitHub Backend...', '#6b87c4');
-
-    try {
-      const jsonString = JSON.stringify(payloadData, null, 2);
-      const encoded = btoa(unescape(encodeURIComponent(jsonString)));
-
-      const bodyObj = {
-        message: 'Sync reading hub data',
-        content: encoded
-      };
-      if (sha) bodyObj.sha = sha;
-
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(bodyObj)
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        localStorage.setItem('gh_file_sha', result.content.sha);
-        setStatus('Synced to GitHub Backend!', '#6b9e6b');
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (err) {
-      console.error(err);
-      setStatus('Cloud upload failed!', '#c0392b');
-    }
-  }
-
-  async function syncNow() {
-    const cloudData = await loadFromGitHub();
-    if (cloudData) {
-      library = cloudData.library || [];
-      tbr = cloudData.tbr || [];
-      localStorage.setItem('bookish_library_backup', JSON.stringify(library));
-      localStorage.setItem('bookish_tbr_backup', JSON.stringify(tbr));
-      renderAll();
-    }
-  }
-
-  async function persistAndSync() {
-    localStorage.setItem('bookish_library_backup', JSON.stringify(library));
-    localStorage.setItem('bookish_tbr_backup', JSON.stringify(tbr));
-    renderAll();
-    await saveToGitHub({ library, tbr });
-  }
-
-  /* ========== RENDER ENGINE ========== */
-  function renderAll() {
-    renderLogTable();
-    renderTbrTable();
-    renderBookshelf();
-    renderCozyLibrary();
-    renderDashboard();
-  }
-
-  function renderLogTable() {
-    const tbody = document.getElementById('log-tbody');
-    const empty = document.getElementById('log-empty');
-    tbody.innerHTML = '';
-
-    if (library.length === 0) {
-      empty.style.display = 'block';
-      return;
-    }
-    empty.style.display = 'none';
-
-    library.forEach(book => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${book.cover ? `<img src="${book.cover}" class="cover-thumb">` : `<div class="cover-placeholder">📖</div>`}</td>
-        <td><strong>${book.title}</strong></td>
-        <td>${book.author}</td>
-        <td><span class="genre-badge">${book.genre || 'General'}</span></td>
-        <td>${book.format || 'Physical'}</td>
-        <td><span class="status-badge status-${book.status}">${book.status}</span></td>
-        <td><span class="rating-display">★ ${book.rating || 0}</span></td>
-        <td>
-          <button class="edit-btn" onclick="editBook('${book.id}', 'library')"><i class="ti ti-edit"></i></button>
-          <button class="del-btn" onclick="deleteBook('${book.id}', 'library')"><i class="ti ti-trash"></i></button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function renderTbrTable() {
-    const tbody = document.getElementById('tbr-log-tbody');
-    tbody.innerHTML = '';
-
-    tbr.forEach(book => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${book.cover ? `<img src="${book.cover}" class="cover-thumb">` : `<div class="cover-placeholder">📌</div>`}</td>
-        <td><strong>${book.title}</strong></td>
-        <td>${book.author}</td>
-        <td><span class="genre-badge">${book.genre || 'TBR'}</span></td>
-        <td>${book.format || 'Target'}</td>
-        <td>
-          <button class="edit-btn" onclick="editBook('${book.id}', 'tbr')"><i class="ti ti-edit"></i></button>
-          <button class="del-btn" onclick="deleteBook('${book.id}', 'tbr')"><i class="ti ti-trash"></i></button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function renderBookshelf() {
-    const grid = document.getElementById('shelf-grid');
-    const tbrGrid = document.getElementById('tbr-shelf-grid');
-    grid.innerHTML = '';
-    tbrGrid.innerHTML = '';
-
-    library.forEach(book => {
-      const card = document.createElement('div');
-      card.className = 'book-card';
-      card.innerHTML = `
-        <div class="book-cover-wrap">
-          ${book.cover ? `<img src="${book.cover}" class="book-cover">` : `<div class="book-cover-placeholder"><div class="book-spine-title">${book.title}</div></div>`}
-        </div>
-        <div class="book-card-info">
-          <div class="book-card-title">${book.title}</div>
-          <div class="book-card-author">${book.author}</div>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-
-    tbr.forEach(book => {
-      const card = document.createElement('div');
-      card.className = 'book-card';
-      card.innerHTML = `
-        <div class="book-cover-wrap">
-          ${book.cover ? `<img src="${book.cover}" class="book-cover">` : `<div class="book-cover-placeholder tbr-placeholder"><div class="book-spine-title">${book.title}</div></div>`}
-        </div>
-        <div class="book-card-info">
-          <div class="book-card-title">${book.title}</div>
-          <div class="book-card-author">${book.author}</div>
-        </div>
-      `;
-      tbrGrid.appendChild(card);
-    });
-  }
-
-  function renderCozyLibrary() {
-    const shelves = ['shelf-1-1', 'shelf-1-2', 'shelf-2-1', 'shelf-2-2', 'shelf-3-1', 'shelf-3-2'];
-    shelves.forEach(s => {
-      const el = document.getElementById(s);
-      if (el) el.innerHTML = '';
-    });
-
-    const colors = ['#8b4513', '#2e8b57', '#4682b4', '#4b0082', '#b22222', '#d2691e', '#556b2f'];
-    library.forEach((book, idx) => {
-      const targetShelf = document.getElementById(shelves[idx % shelves.length]);
-      if (targetShelf) {
-        const spine = document.createElement('div');
-        spine.className = 'cozy-spine-v';
-        spine.style.backgroundColor = colors[idx % colors.length];
-        spine.textContent = book.title;
-        spine.title = `${book.title} by ${book.author}`;
-        targetShelf.appendChild(spine);
-      }
-    });
-  }
-
-  function renderDashboard() {
-    const row = document.getElementById('stats-row');
-    if (!row) return;
-    row.innerHTML = `
-      <div class="stat-card"><div class="stat-label">Total Library Books</div><div class="stat-value">${library.length}</div></div>
-      <div class="stat-card"><div class="stat-label">Currently Reading</div><div class="stat-value">${library.filter(b => b.status === 'reading').length}</div></div>
-      <div class="stat-card"><div class="stat-label">TBR Queue</div><div class="stat-value">${tbr.length}</div></div>
-    `;
-  }
-
-  function filterShelf(filter, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    // Basic filter trigger
-  }
-
-  /* ========== MODAL & ACTIONS ========== */
-  function openModal(type = 'library') {
-    document.getElementById('modal-type').value = type;
-    document.getElementById('modal-title').textContent = type === 'library' ? 'Add Library Book' : 'Add TBR Book';
-    document.getElementById('edit-id').value = '';
-    document.getElementById('f-title').value = '';
-    document.getElementById('f-author').value = '';
-    document.getElementById('f-genre').value = '';
-    document.getElementById('f-cover').value = '';
-    document.getElementById('f-rating-num').value = '5.0';
-    document.getElementById('modal-bg').classList.add('open');
-  }
-
-  function closeModal() {
-    document.getElementById('modal-bg').classList.remove('open');
-  }
-
-  async function saveBookFromModal() {
-    const type = document.getElementById('modal-type').value;
-    const editId = document.getElementById('edit-id').value;
-    const title = document.getElementById('f-title').value.trim();
-    const author = document.getElementById('f-author').value.trim() || 'Unknown';
-    const genre = document.getElementById('f-genre').value.trim() || 'General';
-    const format = document.getElementById('f-format').value;
-    const status = document.getElementById('f-status').value;
-    const rating = parseFloat(document.getElementById('f-rating-num').value) || 0;
-    const cover = document.getElementById('f-cover').value.trim();
-
-    if (!title) return alert('Title is required!');
-
-    const bookObj = {
-      id: editId || Date.now().toString(),
-      title, author, genre, format, status, rating, cover
-    };
-
-    if (type === 'library') {
-      if (editId) {
-        const idx = library.findIndex(b => b.id === editId);
-        if (idx !== -1) library[idx] = bookObj;
-      } else {
-        library.push(bookObj);
-      }
-    } else {
-      if (editId) {
-        const idx = tbr.findIndex(b => b.id === editId);
-        if (idx !== -1) tbr[idx] = bookObj;
-      } else {
-        tbr.push(bookObj);
-      }
-    }
-
-    closeModal();
-    await persistAndSync();
-  }
-
-  function editBook(id, type) {
-    const item = (type === 'library' ? library : tbr).find(b => b.id === id);
-    if (!item) return;
-
-    document.getElementById('modal-type').value = type;
-    document.getElementById('modal-title').textContent = 'Edit Book';
-    document.getElementById('edit-id').value = item.id;
-    document.getElementById('f-title').value = item.title;
-    document.getElementById('f-author').value = item.author;
-    document.getElementById('f-genre').value = item.genre || '';
-    document.getElementById('f-format').value = item.format || 'Physical';
-    document.getElementById('f-status').value = item.status || 'read';
-    document.getElementById('f-rating-num').value = item.rating || 0;
-    document.getElementById('f-cover').value = item.cover || '';
-    
-    document.getElementById('modal-bg').classList.add('open');
-  }
-
-  async function deleteBook(id, type) {
-    if (!confirm('Are you sure you want to delete this book?')) return;
-    if (type === 'library') {
-      library = library.filter(b => b.id !== id);
-    } else {
-      tbr = tbr.filter(b => b.id !== id);
-    }
-    await persistAndSync();
-  }
-
-  /* ========== IMPORT / EXPORT ========== */
-  function exportData(type) {
-    const dataStr = JSON.stringify(type === 'library' ? library : tbr, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${type}.json`;
-    a.click();
-  }
-
-  function triggerImport(type) {
-    currentImportTarget = type;
-    document.getElementById('import-file').click();
-  }
-
-  function handleFileImport(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
+    // Load books from API / Local
+    async function loadBooks() {
       try {
-        const imported = JSON.parse(evt.target.result);
-        if (Array.isArray(imported)) {
-          if (currentImportTarget === 'library') library = imported;
-          else tbr = imported;
-          await persistAndSync();
-          alert('Import successful!');
+        const res = await fetch(API_URL);
+        if (res.ok) {
+          localBooks = await res.json();
+          renderUI();
         }
       } catch (err) {
-        alert('Invalid JSON file format.');
+        console.warn("Render API unavailable. Displaying local state.");
+        renderUI();
       }
-    };
-    reader.readAsText(file);
-  }
-
-  /* ========== INITIALIZATION & AUTOMATIC SYNC EVENTS ========== */
-  window.addEventListener('DOMContentLoaded', async () => {
-    // Populate form inputs with stored credentials
-    if (localStorage.getItem('gh_owner')) document.getElementById('gh-owner').value = localStorage.getItem('gh_owner');
-    if (localStorage.getItem('gh_repo')) document.getElementById('gh-repo').value = localStorage.getItem('gh_repo');
-    if (localStorage.getItem('gh_token')) document.getElementById('gh-token').value = localStorage.getItem('gh_token');
-
-    // Local backup restore for speed
-    const localLib = localStorage.getItem('bookish_library_backup');
-    const localTbr = localStorage.getItem('bookish_tbr_backup');
-    if (localLib) library = JSON.parse(localLib);
-    if (localTbr) tbr = JSON.parse(localTbr);
-    renderAll();
-
-    // Pull live cloud sync
-    await syncNow();
-  });
-
-  // Re-sync automatically when switching back to tab on mobile or laptop
-  window.addEventListener('focus', () => {
-    if (localStorage.getItem('gh_token')) {
-      syncNow();
     }
-  });
-</script>
 
+    // Render UI Elements
+    function renderUI() {
+      const tbody = document.getElementById('books-table-body');
+      const gallery = document.getElementById('books-gallery');
+      
+      tbody.innerHTML = '';
+      gallery.innerHTML = '';
+
+      let total = localBooks.length;
+      let readingCount = 0;
+      let tbrCount = 0;
+      let readThisMonthCount = 0;
+
+      if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="23" style="text-align:center; color:#94A3B8;">No books added yet! Click + Add Book to start.</td></tr>';
+        gallery.innerHTML = '<p style="color:#94A3B8;">No covers available.</p>';
+      }
+
+      localBooks.forEach(book => {
+        if (book.status === 'reading') readingCount++;
+        if (book.status === 'tbr') tbrCount++;
+
+        // Calculate days to read automatically if start and end dates exist
+        let daysToRead = '-';
+        if (book.startDate && book.endDate) {
+          const s = new Date(book.startDate);
+          const e = new Date(book.endDate);
+          const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24));
+          daysToRead = diff >= 0 ? diff : '-';
+        }
+
+        // Add to Table View
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${book.title || ''}</strong></td>
+          <td>${book.author || ''}</td>
+          <td>${book.newAuthor === 'True' ? '✓' : ''}</td>
+          <td>${book.genre || ''}</td>
+          <td>${book.subGenre || ''}</td>
+          <td>${book.ageRange || ''}</td>
+          <td>${book.rating ? '★ ' + book.rating : '-'}</td>
+          <td>${book.format || ''}</td>
+          <td>${book.pageCount || '-'}</td>
+          <td>${book.startDate || '-'}</td>
+          <td>${book.endDate || '-'}</td>
+          <td>${daysToRead}</td>
+          <td>${book.authorGender || ''}</td>
+          <td>${book.bipoc === 'True' ? '✓' : ''}</td>
+          <td>${book.series || ''}</td>
+          <td>${book.queerRep || ''}</td>
+          <td>${book.cry || ''}</td>
+          <td>${book.arc || ''}</td>
+          <td>${book.reread || ''}</td>
+          <td>${book.lowerTbr === 'True' ? '✓' : ''}</td>
+          <td>${book.acquiredFrom || ''}</td>
+          <td>${book.narratedBy || ''}</td>
+          <td>${book.recommendedBy || ''}</td>
+        `;
+        tbody.appendChild(tr);
+
+        // Add to Bookshelf Gallery View
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        card.innerHTML = `
+          <img src="${book.cover || 'https://via.placeholder.com/130x180?text=No+Cover'}" alt="Cover">
+          <div class="title">${book.title || 'Untitled'}</div>
+          <div class="author">${book.author || ''}</div>
+        `;
+        gallery.appendChild(card);
+      });
+
+      // Update Dashboard Stats
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-reading').innerText = readingCount;
+      document.getElementById('stat-tbr').innerText = tbrCount;
+      document.getElementById('stat-read-month').innerText = localBooks.filter(b => b.status === 'read').length;
+    }
+
+    // Save Book Handler
+    async function saveBook() {
+      const newBook = {
+        title: document.getElementById('f-title').value,
+        author: document.getElementById('f-author').value,
+        newAuthor: document.getElementById('f-new-author').value,
+        genre: document.getElementById('f-genre').value,
+        subGenre: document.getElementById('f-subgenre').value,
+        ageRange: document.getElementById('f-age-range').value,
+        authorGender: document.getElementById('f-author-gender').value,
+        bipoc: document.getElementById('f-bipoc').value,
+        series: document.getElementById('f-series').value,
+        tags: document.getElementById('f-tags').value,
+        format: document.getElementById('f-format').value,
+        status: document.getElementById('f-status').value,
+        pageCount: document.getElementById('f-pages').value,
+        audioLength: document.getElementById('f-audio-length').value,
+        wordCount: document.getElementById('f-word-count').value,
+        startDate: document.getElementById('f-start-date').value,
+        endDate: document.getElementById('f-end-date').value,
+        monthRead: document.getElementById('f-month-read').value,
+        rating: parseFloat(document.getElementById('f-rating').value) || 0,
+        queerChars: document.getElementById('f-queer-chars').value,
+        queerRep: document.getElementById('f-queer-rep').value,
+        cry: document.getElementById('f-cry').value,
+        thoughts: document.getElementById('f-thoughts').value,
+        arc: document.getElementById('f-arc').value,
+        reread: document.getElementById('f-reread').value,
+        lowerTbr: document.getElementById('f-lower-tbr').value,
+        acquiredFrom: document.getElementById('f-acquired').value,
+        narratedBy: document.getElementById('f-narrator').value,
+        recommendedBy: document.getElementById('f-recommended').value,
+        cover: document.getElementById('f-cover').value
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newBook)
+        });
+
+        if (res.ok) {
+          const savedBook = await res.json();
+          localBooks.unshift(savedBook);
+        } else {
+          localBooks.unshift(newBook);
+        }
+      } catch (e) {
+        localBooks.unshift(newBook);
+      }
+
+      closeModal();
+      renderUI();
+    }
+
+    // Modal Control Functions
+    function openModal() {
+      document.getElementById('modal-bg').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-bg').classList.remove('active');
+    }
+
+    // Tab Switching Functions
+    function switchMainTab(tab) {
+      if (tab === 'log' || tab === 'hub') switchSubTab('log');
+      if (tab === 'bookshelf') switchSubTab('bookshelf');
+    }
+
+    function switchSubTab(sub) {
+      document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+      
+      if (sub === 'log') document.getElementById('view-log').classList.add('active');
+      if (sub === 'bookshelf') document.getElementById('view-bookshelf').classList.add('active');
+      if (sub === 'dashboard') document.getElementById('view-dashboard').classList.add('active');
+    }
+
+    // Initial load
+    loadBooks();
+  </script>
 </body>
 </html>
