@@ -578,7 +578,66 @@
   </div>
 </div>
 
-<script>
+<script>async function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (!Array.isArray(parsed)) {
+        alert('Invalid JSON file format. Expected an array of books.');
+        return;
+      }
+
+      // Indicate loading status
+      const originalText = document.body.style.cursor;
+      document.body.style.cursor = 'wait';
+
+      // Loop through each book and POST to your Express backend / Render PostgreSQL DB
+      let successCount = 0;
+      for (const book of parsed) {
+        // Enforce target list status if necessary
+        if (importTargetRepo === 'tbr') {
+          book.status = 'tbr';
+        } else if (!book.status || book.status === 'tbr') {
+          book.status = 'read';
+        }
+
+        // Strip local-only ID so database auto-generates a primary key
+        delete book.id;
+
+        try {
+          const res = await fetch('/api/books', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(book)
+          });
+          if (res.ok) successCount++;
+        } catch (err) {
+          console.error('Failed to import book:', book.title, err);
+        }
+      }
+
+      document.body.style.cursor = originalText;
+      alert(`Import complete! Successfully added ${successCount} of ${parsed.length} books to ${importTargetRepo.toUpperCase()}.`);
+
+      // Refresh data directly from your Render backend API
+      if (typeof fetchBooks === 'function') {
+        fetchBooks();
+      } else {
+        renderAll();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error reading or parsing JSON file.');
+    }
+  };
+
+  reader.readAsText(file);
+  e.target.value = ''; // Reset file input
+}
 const API_URL = '/api/books';
 
 let libraryBooks = [];
