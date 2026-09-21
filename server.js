@@ -27,27 +27,24 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
-// POST API: Save book
 app.post('/api/books', async (req, res) => {
   try {
     const keys = Object.keys(req.body);
     const values = Object.values(req.body);
+
+    if (keys.length === 0) {
+      return res.status(400).json({ error: 'No data provided' });
+    }
+
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-    const columns = keys.join(', ');
+    const columns = keys.map(k => `"${k}"`).join(', '); // Quoted column names prevent reserved word conflicts
 
     const query = `INSERT INTO books (${columns}) VALUES (${placeholders}) RETURNING *`;
     const result = await pool.query(query, values);
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to save book' });
+    console.error('Database insertion error:', err);
+    res.status(500).json({ error: 'Failed to insert book' });
   }
-});
-
-// Fallback route: Serve bookish_reading_tracker.html (or index.html)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'bookish_reading_tracker.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
 });
