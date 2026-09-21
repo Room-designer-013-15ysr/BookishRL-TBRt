@@ -1,46 +1,57 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
-app.use(cors()); // Allows your app to talk to this server from any device
+const PORT = process.env.PORT || 3000;
+
+// Enable CORS and JSON body parsing
+app.use(cors());
 app.use(express.json());
 
-// Connects to your Neon database using an environment variable
+// Connect to Neon PostgreSQL using DATABASE_URL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Initialize database table automatically
-pool.query(`
-  CREATE TABLE IF NOT EXISTS books (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    author TEXT,
-    genre TEXT,
-    format TEXT,
-    status TEXT,
-    rating NUMERIC,
-    cover TEXT
-  )
-`);
+// Serve frontend static files (index.html, CSS, client JS)
+app.use(express.static(__dirname));
+
+// --- API ENDPOINTS ---
 
 // GET all books
 app.get('/api/books', async (req, res) => {
-  const result = await pool.query('SELECT * FROM books ORDER BY id DESC');
-  res.json(result.rows);
+  try {
+    const result = await pool.query('SELECT * FROM books ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching books:', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
 });
 
-// POST add a book
+// POST a new book
 app.post('/api/books', async (req, res) => {
-  const { title, author, genre, format, status, rating, cover } = req.body;
-  const result = await pool.query(
-    'INSERT INTO books (title, author, genre, format, status, rating, cover) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [title, author, genre, format, status, rating, cover]
-  );
-  res.json(result.rows[0]);
+  const { title, author, status } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO books (title, author, status) VALUES ($1, $2, $3) RETURNING *',
+      [title, author, status || 'To Read']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error adding book:', err);
+    res.status(500).json({ error: 'Failed to insert book' });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Serve index.html for any direct web page requests
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
