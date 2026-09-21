@@ -6,7 +6,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors());});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
 app.use(express.json());
 
 const pool = new Pool({
@@ -47,9 +52,3 @@ app.post('/api/books', async (req, res) => {
     console.error('Database insertion error:', err);
     res.status(500).json({ error: 'Failed to insert book' });
   }
-});
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on port ${PORT}`);
-});
